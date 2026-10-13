@@ -22,7 +22,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
+import java.time.LocalDate
 import kotlin.math.abs
 
 class FloatingService : Service() {
@@ -42,8 +42,9 @@ class FloatingService : Service() {
     private lateinit var percentual: TextView
 
     private lateinit var banco: BancoDados
-    private lateinit var btnSalvar: Button
     private var expandido = false
+    private var diaAtual: LocalDate = LocalDate.now()
+    private var carregando = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -68,7 +69,6 @@ class FloatingService : Service() {
 
         banco = BancoDados(this)
         panel = root.findViewById(R.id.panel)
-        btnSalvar = root.findViewById(R.id.btnSalvar)
         btnLimpar = root.findViewById(R.id.btnLimpar)
         btnFechar = root.findViewById(R.id.btnFechar)
         resultado = root.findViewById(R.id.resultado)
@@ -84,28 +84,14 @@ class FloatingService : Service() {
         gasto = root.findViewById(R.id.gasto)
         percentual = root.findViewById(R.id.percentual)
 
-        campos.forEach { it.addTextChangedListener(observador { atualizarTudo() }) }
-
-        // Os dados de combustível ficam salvos entre um uso e outro do balão.
-        // O km é do dia: num dia novo ele começa vazio; km/l e preço do litro continuam.
-        val prefs = getSharedPreferences("combustivel", Context.MODE_PRIVATE)
-        if (prefs.getString("kmData", null) != BancoDados.hoje()) {
-            prefs.edit().remove("km").apply()
-        }
-        listOf(km to "km", kmPorLitro to "kmPorLitro", precoLitro to "precoLitro").forEach { (campo, chave) ->
-            campo.setText(prefs.getString(chave, ""))
-            campo.addTextChangedListener(observador {
-                prefs.edit()
-                    .putString(chave, campo.text.toString())
-                    .putString("kmData", BancoDados.hoje())
-                    .apply()
-                salvarCombustivel()
+        // Qualquer mudança em qualquer caixa grava o dia automaticamente.
+        (campos + listOf(km, kmPorLitro, precoLitro)).forEach {
+            it.addTextChangedListener(observador {
+                if (!carregando) salvarDia()
                 atualizarTudo()
             })
         }
-        atualizarTudo()
-
-        btnSalvar.setOnClickListener { salvarCorrida() }
+        carregarDia()
 
         btnLimpar.setOnClickListener {
             campos.forEach { it.text.clear() }
@@ -171,12 +157,13 @@ class FloatingService : Service() {
         expandido = !expandido
         val visibilidade = if (expandido) View.VISIBLE else View.GONE
         panel.visibility = visibilidade
-        btnSalvar.visibility = visibilidade
         btnLimpar.visibility = visibilidade
         btnFechar.visibility = visibilidade
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         if (expandido) {
+            // Se a data virou com o balão aberto, começa o registro do dia novo.
+            if (diaAtual != LocalDate.now()) carregarDia()
             // Precisa receber foco para o teclado funcionar nas caixas.
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
             windowManager.updateViewLayout(root, params)
@@ -223,30 +210,48 @@ class FloatingService : Service() {
 
     private fun somaCorrida() = campos.sumOf { Formato.lerValor(it.text.toString()) }
 
-    private fun salvarCorrida() {
-        val valor = somaCorrida()
-        if (valor <= 0) {
-            Toast.makeText(this, "Digite o valor da corrida antes de salvar", Toast.LENGTH_SHORT).show()
-            return
-        }
-        banco.salvarCorrida(valor)
-        salvarCombustivel()
-        campos.forEach { it.text.clear() }
-        campos.first().requestFocus()
-        Toast.makeText(
-            this,
-            "Corrida de ${Formato.moeda(valor)} salva. Hoje: ${Formato.moeda(banco.totalDeHoje())}",
-            Toast.LENGTH_SHORT
-        ).show()
+    // Mostra o registro de hoje. Num dia novo as caixas começam vazias,
+    // mantendo km/l e preço do litro do último dia salvo.
+    private fun carregarDia() {
+        diaAtual = LocalDate.now()
+        val dia = banco.buscar(diaAtual)
+            ?: banco.ultimoDia()?.let { Dia(diaAtual, kmPorLitro = it.kmPorLitro, precoLitro = it.precoLitro) }
+            ?: diaDasPreferenciasAntigas()
+
+        carregando = true
+        listOf(dia.valor1, dia.valor2, dia.valor3).forEachIndexed { i, v -> campos[i].setText(texto(v)) }
+        km.setText(texto(dia.km))
+        kmPorLitro.setText(texto(dia.kmPorLitro))
+        precoLitro.setText(texto(dia.precoLitro))
+        carregando = false
+        atualizarTudo()
     }
 
-    private fun salvarCombustivel() {
-        banco.salvarCombustivel(
-            Formato.lerValor(km.text.toString()),
-            Formato.lerValor(kmPorLitro.text.toString()),
-            Formato.lerValor(precoLitro.text.toString())
+    // Versões anteriores guardavam km/l e preço do litro fora do banco.
+    private fun diaDasPreferenciasAntigas(): Dia {
+        val prefs = getSharedPreferences("combustivel", Context.MODE_PRIVATE)
+        return Dia(
+            diaAtual,
+            kmPorLitro = Formato.lerValor(prefs.getString("kmPorLitro", "") ?: ""),
+            precoLitro = Formato.lerValor(prefs.getString("precoLitro", "") ?: "")
         )
     }
+
+    private fun salvarDia() {
+        banco.salvar(
+            Dia(
+                data = diaAtual,
+                valor1 = Formato.lerValor(campos[0].text.toString()),
+                valor2 = Formato.lerValor(campos[1].text.toString()),
+                valor3 = Formato.lerValor(campos[2].text.toString()),
+                km = Formato.lerValor(km.text.toString()),
+                kmPorLitro = Formato.lerValor(kmPorLitro.text.toString()),
+                precoLitro = Formato.lerValor(precoLitro.text.toString())
+            )
+        )
+    }
+
+    private fun texto(valor: Double) = if (valor == 0.0) "" else Formato.numero(valor)
 
     private fun iniciarEmPrimeiroPlano() {
         val canalId = "balao"

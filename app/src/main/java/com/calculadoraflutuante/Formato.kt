@@ -9,6 +9,13 @@ object Formato {
 
     fun moeda(valor: Double): String = moeda.format(valor)
 
+    // Número para mostrar numa caixa: "12,5", "120", "6,19".
+    fun numero(valor: Double): String =
+        NumberFormat.getNumberInstance(ptBR).apply {
+            isGroupingUsed = false
+            maximumFractionDigits = 2
+        }.format(valor)
+
     fun percentual(parte: Double, total: Double): String =
         if (total > 0) String.format(ptBR, "%.1f%%", parte / total * 100) else "0%"
 

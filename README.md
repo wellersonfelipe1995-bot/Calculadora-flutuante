@@ -29,10 +29,13 @@ Aceita vírgula ou ponto como decimal (`12,50` ou `12.50`).
 
 ## Histórico diário
 
-Toque em **Salvar** no balão depois de cada corrida: a soma da primeira linha é gravada
-num banco de dados no próprio celular (SQLite), junto com o km, km/l e preço do litro do dia.
-A tela inicial do app mostra, por dia: nº de corridas, ganho bruto, gasto com combustível (e %)
-e o líquido. Segure o dedo sobre um dia para apagá-lo. O km começa vazio a cada dia novo.
+Tudo que é digitado no balão é salvo automaticamente num banco de dados no próprio
+celular (SQLite), **um registro por dia**. Ao mudar qualquer caixa, o registro de hoje é
+atualizado (não cria um novo). Quando a data vira, as caixas começam vazias e um novo
+registro começa; km/l e preço do litro são mantidos do último dia.
+
+A tela inicial do app mostra, por dia: ganho bruto, gasto com combustível (e %) e o
+líquido. Segure o dedo sobre um dia para apagá-lo.
 
 Os dados ficam só no celular: desinstalar o app apaga o histórico.
 

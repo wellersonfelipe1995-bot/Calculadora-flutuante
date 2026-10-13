@@ -23,18 +23,10 @@
             android:textStyle="bold" />
 
         <Button
-            android:id="@+id/btnSalvar"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="8dp"
-            android:text="Salvar"
-            android:visibility="gone" />
-
-        <Button
             android:id="@+id/btnLimpar"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="8dp"
             android:text="Limpar"
             android:visibility="gone" />
 

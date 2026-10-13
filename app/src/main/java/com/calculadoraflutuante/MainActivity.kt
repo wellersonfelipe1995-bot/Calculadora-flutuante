@@ -61,10 +61,10 @@ class MainActivity : Activity() {
         val lista = findViewById<LinearLayout>(R.id.historico)
         lista.removeAllViews()
 
-        val dias = banco.resumoPorDia().filter { it.bruto > 0 || it.gasto > 0 }
+        val dias = banco.todosOsDias().filter { it.bruto > 0 || it.gasto > 0 }
         if (dias.isEmpty()) {
             lista.addView(TextView(this).apply {
-                text = "Nenhuma corrida salva ainda. Use o botão Salvar no balão."
+                text = "Nenhum dia salvo ainda. Os valores digitados no balão são salvos automaticamente."
                 setPadding(0, 16, 0, 0)
             })
             return
@@ -75,7 +75,7 @@ class MainActivity : Activity() {
             lista.addView(TextView(this).apply {
                 text = buildString {
                     append(dia.data.format(formatoData).replaceFirstChar { it.uppercase() })
-                    append("\n${dia.corridas} corrida(s) · ${Formato.moeda(dia.bruto)} bruto")
+                    append("\nBruto: ${Formato.moeda(dia.bruto)}")
                     append("\nCombustível: ${Formato.moeda(dia.gasto)}")
                     append(" (${Formato.percentual(dia.gasto, dia.bruto)}) · ${"%.0f".format(dia.km)} km")
                     append("\nLíquido: ${Formato.moeda(dia.liquido)}")
@@ -94,9 +94,9 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun confirmarApagar(dia: ResumoDia) {
+    private fun confirmarApagar(dia: Dia) {
         AlertDialog.Builder(this)
-            .setMessage("Apagar todas as corridas de ${dia.data.format(formatoData)}?")
+            .setMessage("Apagar o registro de ${dia.data.format(formatoData)}?")
             .setPositiveButton("Apagar") { _, _ ->
                 banco.apagarDia(dia.data)
                 mostrarHistorico()
