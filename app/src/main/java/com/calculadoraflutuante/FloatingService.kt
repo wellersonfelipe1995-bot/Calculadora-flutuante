@@ -22,8 +22,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import java.text.NumberFormat
-import java.util.Locale
+import android.widget.Toast
 import kotlin.math.abs
 
 class FloatingService : Service() {
@@ -42,7 +41,8 @@ class FloatingService : Service() {
     private lateinit var gasto: TextView
     private lateinit var percentual: TextView
 
-    private val moeda = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
+    private lateinit var banco: BancoDados
+    private lateinit var btnSalvar: Button
     private var expandido = false
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -66,7 +66,9 @@ class FloatingService : Service() {
             y = 300
         }
 
+        banco = BancoDados(this)
         panel = root.findViewById(R.id.panel)
+        btnSalvar = root.findViewById(R.id.btnSalvar)
         btnLimpar = root.findViewById(R.id.btnLimpar)
         btnFechar = root.findViewById(R.id.btnFechar)
         resultado = root.findViewById(R.id.resultado)
@@ -85,15 +87,25 @@ class FloatingService : Service() {
         campos.forEach { it.addTextChangedListener(observador { atualizarTudo() }) }
 
         // Os dados de combustível ficam salvos entre um uso e outro do balão.
+        // O km é do dia: num dia novo ele começa vazio; km/l e preço do litro continuam.
         val prefs = getSharedPreferences("combustivel", Context.MODE_PRIVATE)
+        if (prefs.getString("kmData", null) != BancoDados.hoje()) {
+            prefs.edit().remove("km").apply()
+        }
         listOf(km to "km", kmPorLitro to "kmPorLitro", precoLitro to "precoLitro").forEach { (campo, chave) ->
             campo.setText(prefs.getString(chave, ""))
             campo.addTextChangedListener(observador {
-                prefs.edit().putString(chave, campo.text.toString()).apply()
+                prefs.edit()
+                    .putString(chave, campo.text.toString())
+                    .putString("kmData", BancoDados.hoje())
+                    .apply()
+                salvarCombustivel()
                 atualizarTudo()
             })
         }
         atualizarTudo()
+
+        btnSalvar.setOnClickListener { salvarCorrida() }
 
         btnLimpar.setOnClickListener {
             campos.forEach { it.text.clear() }
@@ -108,6 +120,7 @@ class FloatingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (::banco.isInitialized) banco.close()
         if (::root.isInitialized && root.isAttachedToWindow) {
             windowManager.removeView(root)
         }
@@ -158,6 +171,7 @@ class FloatingService : Service() {
         expandido = !expandido
         val visibilidade = if (expandido) View.VISIBLE else View.GONE
         panel.visibility = visibilidade
+        btnSalvar.visibility = visibilidade
         btnLimpar.visibility = visibilidade
         btnFechar.visibility = visibilidade
 
@@ -194,34 +208,44 @@ class FloatingService : Service() {
     }
 
     private fun atualizarTudo() {
-        val bruto = campos.sumOf { lerValor(it.text.toString()) }
-        resultado.text = moeda.format(bruto)
+        val bruto = somaCorrida()
+        resultado.text = Formato.moeda(bruto)
 
-        val consumo = lerValor(kmPorLitro.text.toString())
+        val consumo = Formato.lerValor(kmPorLitro.text.toString())
         val gastoCombustivel = if (consumo > 0) {
-            lerValor(km.text.toString()) / consumo * lerValor(precoLitro.text.toString())
+            Formato.lerValor(km.text.toString()) / consumo * Formato.lerValor(precoLitro.text.toString())
         } else {
             0.0
         }
-        gasto.text = moeda.format(gastoCombustivel)
-
-        percentual.text = if (bruto > 0) {
-            String.format(Locale.forLanguageTag("pt-BR"), "%.1f%%", gastoCombustivel / bruto * 100)
-        } else {
-            "0%"
-        }
+        gasto.text = Formato.moeda(gastoCombustivel)
+        percentual.text = Formato.percentual(gastoCombustivel, bruto)
     }
 
-    // Aceita "12,50", "12.50" e "1.234,56".
-    private fun lerValor(texto: String): Double {
-        val limpo = texto.trim()
-        if (limpo.isEmpty()) return 0.0
-        val normalizado = if (limpo.contains(',')) {
-            limpo.replace(".", "").replace(',', '.')
-        } else {
-            limpo
+    private fun somaCorrida() = campos.sumOf { Formato.lerValor(it.text.toString()) }
+
+    private fun salvarCorrida() {
+        val valor = somaCorrida()
+        if (valor <= 0) {
+            Toast.makeText(this, "Digite o valor da corrida antes de salvar", Toast.LENGTH_SHORT).show()
+            return
         }
-        return normalizado.toDoubleOrNull() ?: 0.0
+        banco.salvarCorrida(valor)
+        salvarCombustivel()
+        campos.forEach { it.text.clear() }
+        campos.first().requestFocus()
+        Toast.makeText(
+            this,
+            "Corrida de ${Formato.moeda(valor)} salva. Hoje: ${Formato.moeda(banco.totalDeHoje())}",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun salvarCombustivel() {
+        banco.salvarCombustivel(
+            Formato.lerValor(km.text.toString()),
+            Formato.lerValor(kmPorLitro.text.toString()),
+            Formato.lerValor(precoLitro.text.toString())
+        )
     }
 
     private fun iniciarEmPrimeiroPlano() {

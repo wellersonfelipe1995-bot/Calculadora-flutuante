@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Calculadora Flutuante</string>
-    <string name="instrucoes">Toque em \"Iniciar balão\" e depois abra seu app de corridas. Toque no balão para abrir a calculadora: some até 3 valores e veja o total. Arraste o balão para mudar de lugar.</string>
+    <string name="instrucoes">Toque em \"Iniciar balão\" e depois abra seu app de corridas. Toque no balão para abrir a calculadora. Depois de cada corrida, digite os valores e toque em Salvar: o total do dia aparece no histórico abaixo. Arraste o balão para mudar de lugar.</string>
     <string name="permitir">Permitir sobrepor outros apps</string>
     <string name="iniciar">Iniciar balão</string>
     <string name="parar">Parar balão</string>
