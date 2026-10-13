@@ -115,12 +115,25 @@
                 android:background="@drawable/gasto_bg" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Legenda do cálculo + % do combustível sobre o ganho bruto, centralizada sob a caixa do gasto -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="km rodados ÷ km/l × preço do litro = gasto"
-            android:textColor="#FFBDBDBD"
-            android:textSize="11sp" />
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/Legenda"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="km rodados ÷ km/l × R$/litro = gasto" />
+
+            <TextView
+                android:id="@+id/percentual"
+                style="@style/Legenda"
+                android:layout_width="88dp"
+                android:gravity="center_horizontal"
+                android:text="0%" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

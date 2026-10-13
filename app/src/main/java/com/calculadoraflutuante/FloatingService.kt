@@ -40,6 +40,7 @@ class FloatingService : Service() {
     private lateinit var kmPorLitro: EditText
     private lateinit var precoLitro: EditText
     private lateinit var gasto: TextView
+    private lateinit var percentual: TextView
 
     private val moeda = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
     private var expandido = false
@@ -79,8 +80,9 @@ class FloatingService : Service() {
         kmPorLitro = root.findViewById(R.id.kmPorLitro)
         precoLitro = root.findViewById(R.id.precoLitro)
         gasto = root.findViewById(R.id.gasto)
+        percentual = root.findViewById(R.id.percentual)
 
-        campos.forEach { it.addTextChangedListener(observador { atualizarResultado() }) }
+        campos.forEach { it.addTextChangedListener(observador { atualizarTudo() }) }
 
         // Os dados de combustível ficam salvos entre um uso e outro do balão.
         val prefs = getSharedPreferences("combustivel", Context.MODE_PRIVATE)
@@ -88,10 +90,10 @@ class FloatingService : Service() {
             campo.setText(prefs.getString(chave, ""))
             campo.addTextChangedListener(observador {
                 prefs.edit().putString(chave, campo.text.toString()).apply()
-                atualizarGasto()
+                atualizarTudo()
             })
         }
-        atualizarGasto()
+        atualizarTudo()
 
         btnLimpar.setOnClickListener {
             campos.forEach { it.text.clear() }
@@ -191,19 +193,23 @@ class FloatingService : Service() {
         override fun afterTextChanged(s: Editable?) = aoMudar()
     }
 
-    private fun atualizarGasto() {
+    private fun atualizarTudo() {
+        val bruto = campos.sumOf { lerValor(it.text.toString()) }
+        resultado.text = moeda.format(bruto)
+
         val consumo = lerValor(kmPorLitro.text.toString())
-        val total = if (consumo > 0) {
+        val gastoCombustivel = if (consumo > 0) {
             lerValor(km.text.toString()) / consumo * lerValor(precoLitro.text.toString())
         } else {
             0.0
         }
-        gasto.text = moeda.format(total)
-    }
+        gasto.text = moeda.format(gastoCombustivel)
 
-    private fun atualizarResultado() {
-        val total = campos.sumOf { lerValor(it.text.toString()) }
-        resultado.text = moeda.format(total)
+        percentual.text = if (bruto > 0) {
+            String.format(Locale.forLanguageTag("pt-BR"), "%.1f%%", gastoCombustivel / bruto * 100)
+        } else {
+            "0%"
+        }
     }
 
     // Aceita "12,50", "12.50" e "1.234,56".

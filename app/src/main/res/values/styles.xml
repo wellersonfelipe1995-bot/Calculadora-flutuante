@@ -28,6 +28,13 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="Legenda">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">#FFBDBDBD</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
     <style name="Sinal">
         <item name="android:layout_width">14dp</item>
         <item name="android:layout_height">wrap_content</item>
