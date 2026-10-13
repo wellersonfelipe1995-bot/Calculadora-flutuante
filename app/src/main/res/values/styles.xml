@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="CaixaValor">
+        <item name="android:layout_width">58dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/box_bg</item>
+        <item name="android:gravity">center</item>
+        <item name="android:hint">0</item>
+        <item name="android:inputType">numberDecimal</item>
+        <item name="android:digits">0123456789,.</item>
+        <item name="android:imeOptions">actionNext|flagNoExtractUi</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:padding">2dp</item>
+        <item name="android:textColor">#FF000000</item>
+        <item name="android:textColorHint">#FF9E9E9E</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Sinal">
+        <item name="android:layout_width">14dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>
