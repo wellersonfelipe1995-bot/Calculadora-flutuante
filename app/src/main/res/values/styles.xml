@@ -16,6 +16,18 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+    <style name="CaixaResultado">
+        <item name="android:layout_width">88dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:paddingHorizontal">4dp</item>
+        <item name="android:text">R$ 0,00</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="Sinal">
         <item name="android:layout_width">14dp</item>
         <item name="android:layout_height">wrap_content</item>

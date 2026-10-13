@@ -45,40 +45,82 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:background="@drawable/panel_bg"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="8dp"
         android:visibility="gone">
 
-        <EditText
-            android:id="@+id/valor1"
-            style="@style/CaixaValor" />
+        <!-- Linha 1: ganhos das corridas -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <TextView style="@style/Sinal" android:text="+" />
+            <EditText
+                android:id="@+id/valor1"
+                style="@style/CaixaValor" />
 
-        <EditText
-            android:id="@+id/valor2"
-            style="@style/CaixaValor" />
+            <TextView style="@style/Sinal" android:text="+" />
 
-        <TextView style="@style/Sinal" android:text="+" />
+            <EditText
+                android:id="@+id/valor2"
+                style="@style/CaixaValor" />
 
-        <EditText
-            android:id="@+id/valor3"
-            style="@style/CaixaValor" />
+            <TextView style="@style/Sinal" android:text="+" />
 
-        <TextView style="@style/Sinal" android:text="=" />
+            <EditText
+                android:id="@+id/valor3"
+                style="@style/CaixaValor" />
+
+            <TextView style="@style/Sinal" android:text="=" />
+
+            <TextView
+                android:id="@+id/resultado"
+                style="@style/CaixaResultado"
+                android:background="@drawable/result_bg" />
+        </LinearLayout>
+
+        <!-- Linha 2: gasto com combustível = km ÷ km/l × preço do litro -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/km"
+                style="@style/CaixaValor"
+                android:hint="km" />
+
+            <TextView style="@style/Sinal" android:text="÷" />
+
+            <EditText
+                android:id="@+id/kmPorLitro"
+                style="@style/CaixaValor"
+                android:hint="km/l" />
+
+            <TextView style="@style/Sinal" android:text="×" />
+
+            <EditText
+                android:id="@+id/precoLitro"
+                style="@style/CaixaValor"
+                android:hint="R$/l" />
+
+            <TextView style="@style/Sinal" android:text="=" />
+
+            <TextView
+                android:id="@+id/gasto"
+                style="@style/CaixaResultado"
+                android:background="@drawable/gasto_bg" />
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/resultado"
-            android:layout_width="88dp"
-            android:layout_height="48dp"
-            android:background="@drawable/result_bg"
-            android:gravity="center"
-            android:maxLines="1"
-            android:paddingHorizontal="4dp"
-            android:text="R$ 0,00"
-            android:textColor="#FFFFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="km rodados ÷ km/l × preço do litro = gasto"
+            android:textColor="#FFBDBDBD"
+            android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>

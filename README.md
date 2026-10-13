@@ -6,10 +6,15 @@ para calcular quanto você ganhou na corrida sem sair do app de corridas.
 
 ```
  (R$)  [Limpar] [Sair]
-┌──────────────────────────────────────┐
-│ [ 12,50 ] + [ 3,00 ] + [ 2 ] = R$ 17,50 │
-└──────────────────────────────────────┘
+┌───────────────────────────────────────────┐
+│ [ 12,50 ] + [ 3,00 ] + [ 2 ]    = R$ 17,50 │
+│ [ 120 ]   ÷ [ 12 ]   × [ 6,00 ] = R$ 60,00 │
+└───────────────────────────────────────────┘
 ```
+
+A segunda linha calcula o gasto com combustível do dia:
+**km rodados ÷ km/l × preço do litro = gasto**. Esses três valores ficam salvos
+mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
 
 ## Como usar
 

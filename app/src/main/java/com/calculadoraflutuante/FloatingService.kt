@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
@@ -35,6 +36,10 @@ class FloatingService : Service() {
     private lateinit var btnFechar: Button
     private lateinit var campos: List<EditText>
     private lateinit var resultado: TextView
+    private lateinit var km: EditText
+    private lateinit var kmPorLitro: EditText
+    private lateinit var precoLitro: EditText
+    private lateinit var gasto: TextView
 
     private val moeda = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
     private var expandido = false
@@ -70,12 +75,23 @@ class FloatingService : Service() {
             root.findViewById(R.id.valor3)
         )
 
-        val observador = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) = atualizarResultado()
+        km = root.findViewById(R.id.km)
+        kmPorLitro = root.findViewById(R.id.kmPorLitro)
+        precoLitro = root.findViewById(R.id.precoLitro)
+        gasto = root.findViewById(R.id.gasto)
+
+        campos.forEach { it.addTextChangedListener(observador { atualizarResultado() }) }
+
+        // Os dados de combustível ficam salvos entre um uso e outro do balão.
+        val prefs = getSharedPreferences("combustivel", Context.MODE_PRIVATE)
+        listOf(km to "km", kmPorLitro to "kmPorLitro", precoLitro to "precoLitro").forEach { (campo, chave) ->
+            campo.setText(prefs.getString(chave, ""))
+            campo.addTextChangedListener(observador {
+                prefs.edit().putString(chave, campo.text.toString()).apply()
+                atualizarGasto()
+            })
         }
-        campos.forEach { it.addTextChangedListener(observador) }
+        atualizarGasto()
 
         btnLimpar.setOnClickListener {
             campos.forEach { it.text.clear() }
@@ -167,6 +183,22 @@ class FloatingService : Service() {
             params.x = params.x.coerceIn(0, maxX)
             windowManager.updateViewLayout(root, params)
         }
+    }
+
+    private fun observador(aoMudar: () -> Unit) = object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        override fun afterTextChanged(s: Editable?) = aoMudar()
+    }
+
+    private fun atualizarGasto() {
+        val consumo = lerValor(kmPorLitro.text.toString())
+        val total = if (consumo > 0) {
+            lerValor(km.text.toString()) / consumo * lerValor(precoLitro.text.toString())
+        } else {
+            0.0
+        }
+        gasto.text = moeda.format(total)
     }
 
     private fun atualizarResultado() {
