@@ -28,6 +28,16 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Aberto pelo ícone com a permissão já dada: só liga o balão, sem mostrar esta tela.
+        // A tela continua acessível pelo botão Histórico do balão e pela notificação.
+        if (savedInstanceState == null && intent.action == Intent.ACTION_MAIN && Settings.canDrawOverlays(this)) {
+            Lembretes.agendar(this)
+            startForegroundService(Intent(this, FloatingService::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
         banco = BancoDados(this)
         respeitarBarrasDoSistema()
@@ -61,7 +71,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        banco.close()
+        if (::banco.isInitialized) banco.close()
     }
 
     // No Android 15 a tela ocupa até atrás da barra de status e da barra de navegação;

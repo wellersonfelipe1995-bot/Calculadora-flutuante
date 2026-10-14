@@ -21,7 +21,9 @@ mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
 
 1. Abra o app **Calculadora Flutuante**.
 2. Toque em **Permitir sobrepor outros apps** e ative a permissão.
-3. Toque em **Iniciar balão**. O balão verde "R$" aparece na tela.
+3. Toque em **Iniciar balão**. O balão verde "R$" aparece na tela. Das próximas vezes,
+   abrir o app pelo ícone já liga o balão direto; a tela do app (com o histórico) abre
+   pelo botão **Histórico** do balão ou pela notificação.
 4. Abra o app de corridas. Toque no balão para abrir/fechar a calculadora.
 5. Arraste o balão para mudar de lugar. **Limpar** zera os ganhos do dia (toque duas vezes:
    o primeiro toque pede confirmação), **Sair** fecha o balão. Também dá para fechar arrastando o balão até a

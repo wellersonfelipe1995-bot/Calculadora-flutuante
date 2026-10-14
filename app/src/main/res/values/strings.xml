@@ -7,5 +7,5 @@
     <string name="parar">Parar balão</string>
     <string name="sem_permissao">Conceda a permissão de sobreposição primeiro.</string>
     <string name="notificacao_titulo">Calculadora flutuante ativa</string>
-    <string name="notificacao_texto">Toque para abrir o app</string>
+    <string name="notificacao_texto">Toque para ver o histórico</string>
 </resources>

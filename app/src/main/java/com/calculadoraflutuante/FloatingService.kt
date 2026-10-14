@@ -415,7 +415,9 @@ class FloatingService : Service() {
         )
 
         val abrirApp = PendingIntent.getActivity(
-            this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
+            this, 0,
+            Intent(this, MainActivity::class.java).putExtra(MainActivity.EXTRA_HISTORICO, true),
+            PendingIntent.FLAG_IMMUTABLE
         )
 
         val notificacao = Notification.Builder(this, canalId)
