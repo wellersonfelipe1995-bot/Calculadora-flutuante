@@ -1,72 +1,219 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rolagem"
+<!-- Tela do app: cabeçalho, conteúdo da aba selecionada e abas inferiores. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_height="match_parent"
+    android:background="@color/fundo"
+    android:orientation="vertical">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tituloAba"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="8dp"
         android:text="@string/app_name"
+        android:textColor="@color/texto"
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <TextView
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/instrucoes"
-        android:textSize="16sp" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-    <Button
-        android:id="@+id/btnPermissao"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/permitir" />
+        <!-- ===== Aba Início ===== -->
+        <ScrollView
+            android:id="@+id/abaInicio"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnIniciar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/iniciar" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="24dp">
 
-    <Button
-        android:id="@+id/btnParar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/parar" />
+                <FrameLayout
+                    android:id="@+id/resumoMesAtual"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
 
-    <TextView
-        android:id="@+id/tituloHistorico"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Histórico por dia"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+                <TextView
+                    style="@style/TituloSecao"
+                    android:text="Últimos dias" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Toque num dia para editá-lo no balão. Segure o dedo para apagá-lo."
-        android:textColor="#FF757575"
-        android:textSize="13sp" />
+                <LinearLayout
+                    android:id="@+id/ultimosDias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
 
+                <TextView
+                    android:id="@+id/verHistorico"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="4dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:padding="12dp"
+                    android:text="Ver histórico completo"
+                    android:textColor="@color/verde"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ===== Aba Histórico ===== -->
+        <ScrollView
+            android:id="@+id/abaHistorico"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    style="@style/TextoAjuda"
+                    android:layout_marginTop="4dp"
+                    android:text="Toque num dia para editá-lo no balão. Segure o dedo para apagá-lo." />
+
+                <LinearLayout
+                    android:id="@+id/historico"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ===== Aba Desempenho ===== -->
+        <ScrollView
+            android:id="@+id/abaDesempenho"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/desempenho"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="24dp" />
+        </ScrollView>
+
+        <!-- ===== Aba Ajustes ===== -->
+        <ScrollView
+            android:id="@+id/abaAjustes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/card_day_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Balão flutuante"
+                        android:textColor="@color/texto"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        style="@style/TextoAjuda"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/instrucoes" />
+
+                    <Button
+                        android:id="@+id/btnPermissao"
+                        style="@style/BotaoSecundario"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/permitir" />
+
+                    <Button
+                        android:id="@+id/btnIniciar"
+                        style="@style/BotaoPrimario"
+                        android:text="@string/iniciar" />
+
+                    <Button
+                        android:id="@+id/btnParar"
+                        style="@style/BotaoSecundario"
+                        android:text="@string/parar" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/card_day_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lembretes"
+                        android:textColor="@color/texto"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        style="@style/TextoAjuda"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/lembretes" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </FrameLayout>
+
+    <!-- ===== Abas inferiores ===== -->
     <LinearLayout
-        android:id="@+id/historico"
+        android:id="@+id/abas"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="vertical" />
+        android:layout_height="64dp"
+        android:background="@drawable/abas_bg"
+        android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/botaoInicio" style="@style/Aba">
+            <ImageView style="@style/AbaIcone" android:src="@drawable/ic_aba_inicio" />
+            <TextView style="@style/AbaTexto" android:text="Início" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/botaoHistorico" style="@style/Aba">
+            <ImageView style="@style/AbaIcone" android:src="@drawable/ic_aba_historico" />
+            <TextView style="@style/AbaTexto" android:text="Histórico" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/botaoDesempenho" style="@style/Aba">
+            <ImageView style="@style/AbaIcone" android:src="@drawable/ic_aba_desempenho" />
+            <TextView style="@style/AbaTexto" android:text="Desempenho" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/botaoAjustes" style="@style/Aba">
+            <ImageView style="@style/AbaIcone" android:src="@drawable/ic_aba_ajustes" />
+            <TextView style="@style/AbaTexto" android:text="Ajustes" />
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
-</ScrollView>

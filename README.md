@@ -31,6 +31,19 @@ mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
 
 Aceita vírgula ou ponto como decimal (`12,50` ou `12.50`).
 
+## Tela do app
+
+A tela do app tem abas na parte de baixo:
+
+- **Início**: card do mês atual (líquido em destaque; bruto, combustível, por fora e média
+  líquida por dia) e os últimos dias.
+- **Histórico**: todos os dias em cards, separados por mês.
+- **Desempenho**: o card de resumo de cada mês.
+- **Ajustes**: permissão do balão, Iniciar/Parar balão e informações dos lembretes.
+
+Layouts: `res/layout/activity_main.xml` (tela e abas), `item_resumo_mes.xml` (card do mês) e
+`item_historico_dia.xml` (card do dia); código em `HistoricoActivity.kt`.
+
 ## Histórico diário
 
 Tudo que é digitado no balão é salvo automaticamente num banco de dados no próprio

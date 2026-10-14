@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="verde">#FF2E7D32</color>
+    <color name="verde_claro">#FFE8F5E9</color>
+    <color name="vermelho">#FFC62828</color>
+    <color name="fundo">#FFF3F5F4</color>
+    <color name="card">#FFFFFFFF</color>
+    <color name="card_livre">#FFECEFF1</color>
+    <color name="borda">#FFE0E4E2</color>
+    <color name="texto">#FF1B1F1D</color>
+    <color name="texto_secundario">#FF6B7370</color>
+    <color name="aba_inativa">#FF8A928F</color>
+</resources>

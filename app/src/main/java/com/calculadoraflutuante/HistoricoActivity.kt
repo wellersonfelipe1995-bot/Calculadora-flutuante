@@ -4,16 +4,16 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import java.time.YearMonth
@@ -22,9 +22,18 @@ import java.util.Locale
 
 class HistoricoActivity : Activity() {
 
+    private enum class Aba(val titulo: String, val conteudo: Int, val botao: Int) {
+        INICIO("Calculadora Flutuante", R.id.abaInicio, R.id.botaoInicio),
+        HISTORICO("Histórico", R.id.abaHistorico, R.id.botaoHistorico),
+        DESEMPENHO("Desempenho", R.id.abaDesempenho, R.id.botaoDesempenho),
+        AJUSTES("Ajustes", R.id.abaAjustes, R.id.botaoAjustes)
+    }
+
     private lateinit var banco: BancoDados
-    private val formatoData = DateTimeFormatter.ofPattern("EEE, dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
-    private val formatoMes = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", Locale.forLanguageTag("pt-BR"))
+    private var abaAtual = Aba.INICIO
+    private val ptBR = Locale.forLanguageTag("pt-BR")
+    private val formatoData = DateTimeFormatter.ofPattern("EEE, dd/MM/yyyy", ptBR)
+    private val formatoMes = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", ptBR)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,8 +47,10 @@ class HistoricoActivity : Activity() {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
         }
 
-        findViewById<Button>(R.id.btnPermissao).setOnClickListener { abrirPermissaoSobreposicao() }
+        Aba.values().forEach { aba -> findViewById<View>(aba.botao).setOnClickListener { selecionarAba(aba) } }
+        findViewById<View>(R.id.verHistorico).setOnClickListener { selecionarAba(Aba.HISTORICO) }
 
+        findViewById<Button>(R.id.btnPermissao).setOnClickListener { abrirPermissaoSobreposicao() }
         findViewById<Button>(R.id.btnIniciar).setOnClickListener {
             if (Settings.canDrawOverlays(this)) {
                 startForegroundService(Intent(this, FloatingService::class.java))
@@ -49,14 +60,27 @@ class HistoricoActivity : Activity() {
                 abrirPermissaoSobreposicao()
             }
         }
-
         findViewById<Button>(R.id.btnParar).setOnClickListener {
             stopService(Intent(this, FloatingService::class.java))
         }
+
+        // Sem a permissão do balão, a primeira coisa a fazer está em Ajustes.
+        val salva = savedInstanceState?.getString(ESTADO_ABA)?.let { Aba.valueOf(it) }
+        selecionarAba(salva ?: if (Settings.canDrawOverlays(this)) Aba.INICIO else Aba.AJUSTES)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(ESTADO_ABA, abaAtual.name)
     }
 
     override fun onResume() {
         super.onResume()
+        // Aberto pelo botão Histórico do balão ou pela notificação.
+        if (intent.getBooleanExtra(EXTRA_HISTORICO, false)) {
+            intent.removeExtra(EXTRA_HISTORICO)
+            selecionarAba(Aba.HISTORICO)
+        }
         mostrarHistorico()
     }
 
@@ -66,9 +90,9 @@ class HistoricoActivity : Activity() {
     }
 
     // No Android 15 a tela ocupa até atrás da barra de status e da barra de navegação;
-    // o espaçamento evita que o texto fique escondido atrás delas.
+    // o espaçamento evita que o conteúdo e as abas fiquem escondidos atrás delas.
     private fun respeitarBarrasDoSistema() {
-        findViewById<View>(R.id.rolagem).setOnApplyWindowInsetsListener { v, insets ->
+        findViewById<View>(R.id.raiz).setOnApplyWindowInsetsListener { v, insets ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 val barras = insets.getInsets(WindowInsets.Type.systemBars())
                 v.setPadding(barras.left, barras.top, barras.right, barras.bottom)
@@ -97,6 +121,22 @@ class HistoricoActivity : Activity() {
         }
     }
 
+    private fun selecionarAba(aba: Aba) {
+        abaAtual = aba
+        findViewById<TextView>(R.id.tituloAba).text = aba.titulo
+        val verde = getColor(R.color.verde)
+        val cinza = getColor(R.color.aba_inativa)
+        Aba.values().forEach { a ->
+            val ativa = a == aba
+            findViewById<View>(a.conteudo).visibility = if (ativa) View.VISIBLE else View.GONE
+            val botao = findViewById<ViewGroup>(a.botao)
+            val cor = if (ativa) verde else cinza
+            (botao.getChildAt(0) as ImageView).setColorFilter(cor)
+            (botao.getChildAt(1) as TextView).setTextColor(cor)
+        }
+        if (aba == Aba.HISTORICO) findViewById<View>(R.id.abaHistorico).scrollTo(0, 0)
+    }
+
     private fun abrirBalaoNoDia(data: String) {
         if (Settings.canDrawOverlays(this)) {
             startForegroundService(
@@ -109,82 +149,117 @@ class HistoricoActivity : Activity() {
         }
     }
 
+    // Preenche as abas Início, Histórico e Desempenho a partir do banco.
     private fun mostrarHistorico() {
-        val lista = findViewById<LinearLayout>(R.id.historico)
-        lista.removeAllViews()
-
         val dias = banco.todosOsDias().filter { it.registrado }
-        if (dias.isEmpty()) {
-            lista.addView(TextView(this).apply {
-                text = "Nenhum dia salvo ainda. Os valores digitados no balão são salvos automaticamente."
-                setPadding(0, 16, 0, 0)
-            })
+        val porMes = dias.groupBy { YearMonth.from(it.data) }
+
+        // Início: resumo do mês atual e os últimos dias.
+        val mesAtual = YearMonth.now()
+        findViewById<ViewGroup>(R.id.resumoMesAtual).apply {
+            removeAllViews()
+            addView(cardResumoMes(this, mesAtual, porMes[mesAtual].orEmpty()))
         }
+        findViewById<ViewGroup>(R.id.ultimosDias).apply {
+            removeAllViews()
+            if (dias.isEmpty()) addView(textoVazio())
+            dias.take(5).forEach { addView(cardDia(this, it)) }
+        }
+        findViewById<View>(R.id.verHistorico).visibility = if (dias.size > 5) View.VISIBLE else View.GONE
 
-        val dp = resources.displayMetrics.density
-        dias.groupBy { YearMonth.from(it.data) }.forEach { (mes, diasDoMes) ->
-            // Resumo do mês, com destaque para as corridas por fora (3ª caixa).
-            val porFora = diasDoMes.sumOf { it.valor3 }
-            val bruto = diasDoMes.sumOf { it.bruto }
-            val gasto = diasDoMes.sumOf { it.gasto }
-            val trabalhados = diasDoMes.count { !it.folga && it.bruto > 0 }
-            val livres = diasDoMes.count { it.folga }
-            lista.addView(TextView(this).apply {
-                text = buildString {
-                    append(mes.format(formatoMes).replaceFirstChar { it.uppercase() })
-                    append("\nPor fora no mês: ${Formato.moeda(porFora)}")
-                    append("\nBruto: ${Formato.moeda(bruto)} · Combustível: ${Formato.moeda(gasto)}")
-                    append("\nLíquido: ${Formato.moeda(bruto - gasto)}")
-                    append("\n$trabalhados dia(s) trabalhado(s) · $livres dia(s) livre(s)")
-                    if (trabalhados > 0) {
-                        append("\nMédia por dia trabalhado: ${Formato.moeda(bruto / trabalhados)} bruto")
-                        append(" · ${Formato.moeda((bruto - gasto) / trabalhados)} líquido")
-                    }
-                }
-                textSize = 16f
-                setTypeface(typeface, Typeface.BOLD)
-                setBackgroundColor(0x1A2E7D32)
-                val p = (12 * dp).toInt()
-                setPadding(p, p, p, p)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { topMargin = (16 * dp).toInt() }
-            })
-
-            diasDoMes.forEach { dia ->
-                lista.addView(TextView(this).apply {
-                    text = if (dia.folga) {
-                        dia.data.format(formatoData).replaceFirstChar { it.uppercase() } + "\nDia livre"
-                    } else buildString {
-                        append(dia.data.format(formatoData).replaceFirstChar { it.uppercase() })
-                        append("\nBruto: ${Formato.moeda(dia.bruto)} · Por fora: ${Formato.moeda(dia.valor3)}")
-                        append("\nCombustível: ${Formato.moeda(dia.gasto)}")
-                        append(" (${Formato.percentual(dia.gasto, dia.bruto)}) · ${"%.0f".format(dia.km)} km")
-                        append("\nLíquido: ${Formato.moeda(dia.liquido)}")
-                    }
-                    textSize = 15f
-                    setPadding(0, (12 * dp).toInt(), 0, (12 * dp).toInt())
-                    setOnClickListener { abrirBalaoNoDia(dia.data.toString()) }
-                    setOnLongClickListener {
-                        confirmarApagar(dia)
-                        true
-                    }
-                })
-                lista.addView(View(this).apply {
-                    setBackgroundColor(0x22000000)
-                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (1 * dp).toInt())
-                })
+        // Histórico: todos os dias, separados por mês.
+        findViewById<ViewGroup>(R.id.historico).apply {
+            removeAllViews()
+            if (dias.isEmpty()) addView(textoVazio())
+            porMes.forEach { (mes, diasDoMes) ->
+                addView(tituloMes(mes, diasDoMes))
+                diasDoMes.forEach { addView(cardDia(this, it)) }
             }
         }
 
-        // Aberto pelo botão Histórico do balão: rola direto para o histórico.
-        if (intent.getBooleanExtra(EXTRA_HISTORICO, false)) {
-            intent.removeExtra(EXTRA_HISTORICO)
-            val rolagem = findViewById<ScrollView>(R.id.rolagem)
-            val titulo = findViewById<View>(R.id.tituloHistorico)
-            rolagem.post { rolagem.scrollTo(0, titulo.top) }
+        // Desempenho: o card de resumo de cada mês.
+        findViewById<ViewGroup>(R.id.desempenho).apply {
+            removeAllViews()
+            if (dias.isEmpty()) addView(textoVazio())
+            porMes.forEach { (mes, diasDoMes) -> addView(cardResumoMes(this, mes, diasDoMes)) }
         }
     }
+
+    private fun cardResumoMes(pai: ViewGroup, mes: YearMonth, diasDoMes: List<Dia>): View {
+        val card = layoutInflater.inflate(R.layout.item_resumo_mes, pai, false)
+        val bruto = diasDoMes.sumOf { it.bruto }
+        val gasto = diasDoMes.sumOf { it.gasto }
+        val trabalhados = diasDoMes.count { !it.folga && it.bruto > 0 }
+        val livres = diasDoMes.count { it.folga }
+
+        card.texto(R.id.mes, mes.format(formatoMes).replaceFirstChar { it.uppercase() })
+        card.texto(R.id.liquido, Formato.moeda(bruto - gasto))
+        card.texto(R.id.bruto, Formato.moeda(bruto))
+        card.texto(R.id.rotuloCombustivel, "Combustível · ${Formato.percentual(gasto, bruto)}")
+        card.texto(R.id.combustivel, Formato.moeda(gasto))
+        card.texto(R.id.porFora, Formato.moeda(diasDoMes.sumOf { it.valor3 }))
+        card.texto(R.id.media, if (trabalhados > 0) Formato.moeda((bruto - gasto) / trabalhados) else "—")
+        card.texto(R.id.dias, "${plural(trabalhados, "dia trabalhado", "dias trabalhados")} · " +
+            plural(livres, "dia livre", "dias livres"))
+        return card
+    }
+
+    private fun cardDia(pai: ViewGroup, dia: Dia): View {
+        val card = layoutInflater.inflate(R.layout.item_historico_dia, pai, false)
+        card.texto(R.id.data, dia.data.format(formatoData).replaceFirstChar { it.uppercase() })
+
+        if (dia.folga) {
+            // Dia livre: card neutro e discreto, sem valores.
+            card.setBackgroundResource(R.drawable.card_day_livre_bg)
+            card.elevation = 0f
+            card.alpha = 0.6f
+            card.findViewById<View>(R.id.detalhes).visibility = View.GONE
+            card.findViewById<TextView>(R.id.liquido).apply {
+                text = "Dia livre"
+                setTextColor(getColor(R.color.texto_secundario))
+                textSize = 14f
+            }
+        } else {
+            card.texto(R.id.liquido, Formato.moeda(dia.liquido))
+            card.texto(R.id.bruto, Formato.moeda(dia.bruto))
+            card.texto(R.id.porFora, Formato.moeda(dia.valor3))
+            card.texto(R.id.rotuloCombustivel, "Combustível · ${"%.0f".format(dia.km)} km")
+            card.texto(R.id.combustivel, "${Formato.moeda(dia.gasto)} (${Formato.percentual(dia.gasto, dia.bruto)})")
+        }
+
+        card.setOnClickListener { abrirBalaoNoDia(dia.data.toString()) }
+        card.setOnLongClickListener {
+            confirmarApagar(dia)
+            true
+        }
+        return card
+    }
+
+    private fun tituloMes(mes: YearMonth, diasDoMes: List<Dia>): View {
+        val bruto = diasDoMes.sumOf { it.bruto }
+        val liquido = bruto - diasDoMes.sumOf { it.gasto }
+        val dp = resources.displayMetrics.density
+        return TextView(this).apply {
+            text = "${mes.format(formatoMes).replaceFirstChar { it.uppercase() }}  ·  ${Formato.moeda(liquido)} líquido"
+            setTextColor(getColor(R.color.texto_secundario))
+            textSize = 13f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(4, (20 * dp).toInt(), 0, (10 * dp).toInt())
+        }
+    }
+
+    private fun textoVazio() = TextView(this).apply {
+        text = "Nenhum dia salvo ainda. Os valores digitados no balão são salvos automaticamente."
+        setTextColor(getColor(R.color.texto_secundario))
+        textSize = 14f
+        setPadding(0, 24, 0, 24)
+    }
+
+    private fun View.texto(id: Int, valor: String) {
+        findViewById<TextView>(id).text = valor
+    }
+
+    private fun plural(n: Int, singular: String, plural: String) = "$n ${if (n == 1) singular else plural}"
 
     private fun confirmarApagar(dia: Dia) {
         AlertDialog.Builder(this)
@@ -206,5 +281,6 @@ class HistoricoActivity : Activity() {
     companion object {
         const val EXTRA_HISTORICO = "historico"
         const val EXTRA_EDITAR_DATA = "editarData"
+        private const val ESTADO_ABA = "aba"
     }
 }
