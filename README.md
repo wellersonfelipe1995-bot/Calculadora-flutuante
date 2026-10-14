@@ -24,7 +24,8 @@ mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
 3. Toque em **Iniciar balão**. O balão verde "R$" aparece na tela.
 4. Abra o app de corridas. Toque no balão para abrir/fechar a calculadora.
 5. Arraste o balão para mudar de lugar. **Limpar** zera os ganhos do dia (toque duas vezes:
-   o primeiro toque pede confirmação), **Sair** fecha o balão.
+   o primeiro toque pede confirmação), **Sair** fecha o balão. Também dá para fechar arrastando o balão até a
+   lixeira que aparece no pé da tela.
 
 Aceita vírgula ou ponto como decimal (`12,50` ou `12.50`).
 

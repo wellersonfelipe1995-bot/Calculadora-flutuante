@@ -22,11 +22,13 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.hypot
 
 class FloatingService : Service() {
 
@@ -49,6 +51,7 @@ class FloatingService : Service() {
     private lateinit var diaSeguinte: View
     private lateinit var diaLivre: CheckBox
 
+    private lateinit var lixeira: ImageView
     private lateinit var banco: BancoDados
     private var expandido = false
     private var diaAtual: LocalDate = LocalDate.now()
@@ -160,6 +163,43 @@ class FloatingService : Service() {
         }
 
         windowManager.addView(root, params)
+        criarLixeira()
+    }
+
+    // Lixeira no pé da tela: aparece ao arrastar o balão; soltar em cima dela fecha o balão.
+    private fun criarLixeira() {
+        val dp = resources.displayMetrics.density
+        lixeira = ImageView(this).apply {
+            setImageResource(R.drawable.ic_lixeira)
+            setBackgroundResource(R.drawable.lixeira_bg)
+            scaleType = ImageView.ScaleType.CENTER
+            visibility = View.GONE
+        }
+        val tamanho = (64 * dp).toInt()
+        windowManager.addView(lixeira, WindowManager.LayoutParams(
+            tamanho,
+            tamanho,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            y = (48 * dp).toInt()
+        })
+    }
+
+    private fun dedoSobreLixeira(x: Float, y: Float): Boolean {
+        val pos = IntArray(2)
+        lixeira.getLocationOnScreen(pos)
+        val centroX = pos[0] + lixeira.width / 2f
+        val centroY = pos[1] + lixeira.height / 2f
+        return hypot(x - centroX, y - centroY) < 72 * resources.displayMetrics.density
+    }
+
+    private fun destacarLixeira(ativa: Boolean) {
+        lixeira.setBackgroundResource(if (ativa) R.drawable.lixeira_ativa_bg else R.drawable.lixeira_bg)
+        val escala = if (ativa) 1.25f else 1f
+        lixeira.animate().scaleX(escala).scaleY(escala).setDuration(100).start()
     }
 
     // Aberto por um lembrete ou pelo histórico: mostra o painel já no dia pedido.
@@ -174,6 +214,9 @@ class FloatingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         if (::banco.isInitialized) banco.close()
+        if (::lixeira.isInitialized && lixeira.isAttachedToWindow) {
+            windowManager.removeView(lixeira)
+        }
         if (::root.isInitialized && root.isAttachedToWindow) {
             windowManager.removeView(root)
         }
@@ -185,6 +228,7 @@ class FloatingService : Service() {
         var toqueX = 0f
         var toqueY = 0f
         var arrastou = false
+        var sobreLixeira = false
         val limiar = 10 * resources.displayMetrics.density
 
         bolha.setOnTouchListener { v, evento ->
@@ -200,16 +244,32 @@ class FloatingService : Service() {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = evento.rawX - toqueX
                     val dy = evento.rawY - toqueY
-                    if (abs(dx) > limiar || abs(dy) > limiar) arrastou = true
+                    if (!arrastou && (abs(dx) > limiar || abs(dy) > limiar)) {
+                        arrastou = true
+                        lixeira.visibility = View.VISIBLE
+                    }
                     if (arrastou) {
                         params.x = (inicioX + dx).toInt()
                         params.y = (inicioY + dy).toInt()
                         windowManager.updateViewLayout(root, params)
+
+                        val agora = dedoSobreLixeira(evento.rawX, evento.rawY)
+                        if (agora != sobreLixeira) {
+                            sobreLixeira = agora
+                            destacarLixeira(agora)
+                        }
                     }
                     true
                 }
-                MotionEvent.ACTION_UP -> {
-                    if (!arrastou) {
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (arrastou) {
+                        lixeira.visibility = View.GONE
+                        if (sobreLixeira) {
+                            sobreLixeira = false
+                            destacarLixeira(false)
+                            if (evento.action == MotionEvent.ACTION_UP) stopSelf()
+                        }
+                    } else if (evento.action == MotionEvent.ACTION_UP) {
                         v.performClick()
                         alternarPainel()
                     }
