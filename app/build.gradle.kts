@@ -15,7 +15,24 @@ android {
         versionName = "1.0"
     }
 
+    // Assinatura fixa, vinda dos segredos do GitHub (ver .github/workflows/build-apk.yml).
+    // Sem ela cada APK sai com uma chave nova e o Android recusa instalar por cima.
+    val arquivoAssinatura = System.getenv("ASSINATURA_ARQUIVO")
+    if (arquivoAssinatura != null) {
+        signingConfigs {
+            create("fixa") {
+                storeFile = file(arquivoAssinatura)
+                storePassword = System.getenv("ASSINATURA_SENHA")
+                keyAlias = "calculadora"
+                keyPassword = System.getenv("ASSINATURA_SENHA")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            if (arquivoAssinatura != null) signingConfig = signingConfigs.getByName("fixa")
+        }
         release {
             isMinifyEnabled = false
         }
