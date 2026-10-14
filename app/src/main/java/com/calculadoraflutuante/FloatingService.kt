@@ -33,6 +33,7 @@ class FloatingService : Service() {
     private lateinit var panel: View
     private lateinit var btnLimpar: Button
     private lateinit var btnFechar: Button
+    private lateinit var btnHistorico: Button
     private lateinit var campos: List<EditText>
     private lateinit var resultado: TextView
     private lateinit var km: EditText
@@ -73,6 +74,7 @@ class FloatingService : Service() {
         panel = root.findViewById(R.id.panel)
         btnLimpar = root.findViewById(R.id.btnLimpar)
         btnFechar = root.findViewById(R.id.btnFechar)
+        btnHistorico = root.findViewById(R.id.btnHistorico)
         resultado = root.findViewById(R.id.resultado)
         campos = listOf(
             root.findViewById(R.id.valor1),
@@ -116,6 +118,14 @@ class FloatingService : Service() {
             }
         }
         btnFechar.setOnClickListener { stopSelf() }
+        btnHistorico.setOnClickListener {
+            alternarPainel()
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .putExtra(MainActivity.EXTRA_HISTORICO, true)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            )
+        }
 
         configurarArraste(root.findViewById(R.id.bubble))
 
@@ -177,6 +187,7 @@ class FloatingService : Service() {
         panel.visibility = visibilidade
         btnLimpar.visibility = visibilidade
         btnFechar.visibility = visibilidade
+        btnHistorico.visibility = visibilidade
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         if (expandido) {

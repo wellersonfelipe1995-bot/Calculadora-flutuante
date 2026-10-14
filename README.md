@@ -35,8 +35,11 @@ celular (SQLite), **um registro por dia**. Ao mudar qualquer caixa, o registro d
 atualizado (não cria um novo). Quando a data vira, as caixas começam vazias e um novo
 registro começa; km/l e preço do litro são mantidos do último dia.
 
-A tela inicial do app mostra, por dia: ganho bruto, gasto com combustível (e %) e o
-líquido. Segure o dedo sobre um dia para apagá-lo.
+A tela inicial do app mostra o histórico agrupado por mês. Cada mês traz o total
+**por fora** (3ª caixa: corridas por fora e gorjetas), bruto, combustível e líquido; abaixo,
+cada dia com os mesmos dados. Segure o dedo sobre um dia para apagá-lo.
+
+O botão **Histórico** no balão abre o app direto nessa lista.
 
 Os dados ficam só no celular: desinstalar o app apaga o histórico.
 

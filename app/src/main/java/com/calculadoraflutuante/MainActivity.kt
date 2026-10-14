@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -11,8 +12,10 @@ import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -20,6 +23,7 @@ class MainActivity : Activity() {
 
     private lateinit var banco: BancoDados
     private val formatoData = DateTimeFormatter.ofPattern("EEE, dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
+    private val formatoMes = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", Locale.forLanguageTag("pt-BR"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +61,11 @@ class MainActivity : Activity() {
         banco.close()
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     private fun mostrarHistorico() {
         val lista = findViewById<LinearLayout>(R.id.historico)
         lista.removeAllViews()
@@ -67,30 +76,60 @@ class MainActivity : Activity() {
                 text = "Nenhum dia salvo ainda. Os valores digitados no balão são salvos automaticamente."
                 setPadding(0, 16, 0, 0)
             })
-            return
         }
 
         val dp = resources.displayMetrics.density
-        dias.forEach { dia ->
+        dias.groupBy { YearMonth.from(it.data) }.forEach { (mes, diasDoMes) ->
+            // Resumo do mês, com destaque para as corridas por fora (3ª caixa).
+            val porFora = diasDoMes.sumOf { it.valor3 }
+            val bruto = diasDoMes.sumOf { it.bruto }
+            val gasto = diasDoMes.sumOf { it.gasto }
             lista.addView(TextView(this).apply {
                 text = buildString {
-                    append(dia.data.format(formatoData).replaceFirstChar { it.uppercase() })
-                    append("\nBruto: ${Formato.moeda(dia.bruto)}")
-                    append("\nCombustível: ${Formato.moeda(dia.gasto)}")
-                    append(" (${Formato.percentual(dia.gasto, dia.bruto)}) · ${"%.0f".format(dia.km)} km")
-                    append("\nLíquido: ${Formato.moeda(dia.liquido)}")
+                    append(mes.format(formatoMes).replaceFirstChar { it.uppercase() })
+                    append("\nPor fora no mês: ${Formato.moeda(porFora)}")
+                    append("\nBruto: ${Formato.moeda(bruto)} · Combustível: ${Formato.moeda(gasto)}")
+                    append("\nLíquido: ${Formato.moeda(bruto - gasto)}")
                 }
-                textSize = 15f
-                setPadding(0, (12 * dp).toInt(), 0, (12 * dp).toInt())
-                setOnLongClickListener {
-                    confirmarApagar(dia)
-                    true
-                }
+                textSize = 16f
+                setTypeface(typeface, Typeface.BOLD)
+                setBackgroundColor(0x1A2E7D32)
+                val p = (12 * dp).toInt()
+                setPadding(p, p, p, p)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = (16 * dp).toInt() }
             })
-            lista.addView(View(this).apply {
-                setBackgroundColor(0x22000000)
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (1 * dp).toInt())
-            })
+
+            diasDoMes.forEach { dia ->
+                lista.addView(TextView(this).apply {
+                    text = buildString {
+                        append(dia.data.format(formatoData).replaceFirstChar { it.uppercase() })
+                        append("\nBruto: ${Formato.moeda(dia.bruto)} · Por fora: ${Formato.moeda(dia.valor3)}")
+                        append("\nCombustível: ${Formato.moeda(dia.gasto)}")
+                        append(" (${Formato.percentual(dia.gasto, dia.bruto)}) · ${"%.0f".format(dia.km)} km")
+                        append("\nLíquido: ${Formato.moeda(dia.liquido)}")
+                    }
+                    textSize = 15f
+                    setPadding(0, (12 * dp).toInt(), 0, (12 * dp).toInt())
+                    setOnLongClickListener {
+                        confirmarApagar(dia)
+                        true
+                    }
+                })
+                lista.addView(View(this).apply {
+                    setBackgroundColor(0x22000000)
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (1 * dp).toInt())
+                })
+            }
+        }
+
+        // Aberto pelo botão Histórico do balão: rola direto para o histórico.
+        if (intent.getBooleanExtra(EXTRA_HISTORICO, false)) {
+            intent.removeExtra(EXTRA_HISTORICO)
+            val rolagem = findViewById<ScrollView>(R.id.rolagem)
+            val titulo = findViewById<View>(R.id.tituloHistorico)
+            rolagem.post { rolagem.scrollTo(0, titulo.top) }
         }
     }
 
@@ -109,5 +148,9 @@ class MainActivity : Activity() {
         startActivity(
             Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
         )
+    }
+
+    companion object {
+        const val EXTRA_HISTORICO = "historico"
     }
 }
