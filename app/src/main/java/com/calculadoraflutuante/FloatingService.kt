@@ -45,6 +45,8 @@ class FloatingService : Service() {
     private var expandido = false
     private var diaAtual: LocalDate = LocalDate.now()
     private var carregando = false
+    private var confirmandoLimpeza = false
+    private lateinit var cancelarLimpeza: Runnable
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -93,9 +95,25 @@ class FloatingService : Service() {
         }
         carregarDia()
 
+        // Limpar pede confirmação: o 1º toque vira "Confirmar?", o 2º (em até 3 s) apaga.
+        val corOriginal = btnLimpar.textColors
+        cancelarLimpeza = Runnable {
+            confirmandoLimpeza = false
+            btnLimpar.text = "Limpar"
+            btnLimpar.setTextColor(corOriginal)
+        }
         btnLimpar.setOnClickListener {
-            campos.forEach { it.text.clear() }
-            campos.first().requestFocus()
+            if (!confirmandoLimpeza) {
+                confirmandoLimpeza = true
+                btnLimpar.text = "Confirmar?"
+                btnLimpar.setTextColor(0xFFC62828.toInt())
+                btnLimpar.postDelayed(cancelarLimpeza, 3000)
+            } else {
+                btnLimpar.removeCallbacks(cancelarLimpeza)
+                cancelarLimpeza.run()
+                campos.forEach { it.text.clear() }
+                campos.first().requestFocus()
+            }
         }
         btnFechar.setOnClickListener { stopSelf() }
 
@@ -172,6 +190,8 @@ class FloatingService : Service() {
             campo.requestFocus()
             campo.postDelayed({ imm.showSoftInput(campo, InputMethodManager.SHOW_IMPLICIT) }, 150)
         } else {
+            btnLimpar.removeCallbacks(cancelarLimpeza)
+            cancelarLimpeza.run()
             imm.hideSoftInputFromWindow(root.windowToken, 0)
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             windowManager.updateViewLayout(root, params)
