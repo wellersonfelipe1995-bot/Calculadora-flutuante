@@ -69,7 +69,11 @@ class FloatingService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            // NOT_TOUCH_MODAL deixa os toques fora do balão chegarem ao app de baixo;
+            // WATCH_OUTSIDE_TOUCH avisa o balão desses toques para ele se recolher.
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -148,6 +152,12 @@ class FloatingService : Service() {
         }
 
         configurarArraste(root.findViewById(R.id.bubble))
+
+        // Tocar fora do painel aberto recolhe o balão (os valores já estão salvos).
+        root.setOnTouchListener { _, evento ->
+            if (evento.action == MotionEvent.ACTION_OUTSIDE && expandido) alternarPainel()
+            false
+        }
 
         windowManager.addView(root, params)
     }
