@@ -284,6 +284,11 @@ class FloatingService : Service() {
             else -> diaAtual.format(formatoData)
         }
         diaSeguinte.alpha = if (diaAtual < hoje) 1f else 0.3f
+        // Com ganhos ou km lançados não faz sentido marcar dia livre: a opção fica
+        // desabilitada (mas, se já estiver marcada, continua dando para desmarcar).
+        val temValores = bruto > 0 || Formato.lerValor(km.text.toString()) > 0
+        diaLivre.isEnabled = !temValores || diaLivre.isChecked
+        diaLivre.alpha = if (diaLivre.isEnabled) 1f else 0.35f
         // Dia livre deixa as caixas apagadas, mas ainda editáveis.
         val alfa = if (diaLivre.isChecked) 0.4f else 1f
         (campos + listOf(km, kmPorLitro, precoLitro)).forEach { it.alpha = alfa }
