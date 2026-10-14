@@ -289,9 +289,13 @@ class FloatingService : Service() {
         val temValores = bruto > 0 || Formato.lerValor(km.text.toString()) > 0
         diaLivre.isEnabled = !temValores || diaLivre.isChecked
         diaLivre.alpha = if (diaLivre.isEnabled) 1f else 0.35f
-        // Dia livre deixa as caixas apagadas, mas ainda editáveis.
-        val alfa = if (diaLivre.isChecked) 0.4f else 1f
-        (campos + listOf(km, kmPorLitro, precoLitro)).forEach { it.alpha = alfa }
+        // Dia livre bloqueia as caixas: não dá para lançar valores num dia de folga.
+        val livre = diaLivre.isChecked
+        (campos + listOf(km, kmPorLitro, precoLitro)).forEach {
+            it.isEnabled = !livre
+            it.alpha = if (livre) 0.4f else 1f
+            if (livre && it.hasFocus()) it.clearFocus()
+        }
     }
 
     private fun somaCorrida() = campos.sumOf { Formato.lerValor(it.text.toString()) }
