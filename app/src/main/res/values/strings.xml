@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Calculadora Flutuante</string>
-    <string name="instrucoes">Toque em \"Iniciar balão\" e depois abra seu app de corridas. Toque no balão para abrir a calculadora e vá somando os ganhos do dia nas caixas. Tudo é salvo automaticamente, um registro por dia; no dia seguinte as caixas começam vazias. Arraste o balão para mudar de lugar.</string>
+    <string name="instrucoes">Toque em \"Iniciar balão\" e depois abra seu app de corridas. Toque no balão para abrir a calculadora e vá somando os ganhos do dia nas caixas. Tudo é salvo automaticamente, um registro por dia. Use as setas ◀ ▶ do balão para lançar dias atrasados e marque \"Dia livre\" nos dias de folga. Se um dia ficar sem registro, você recebe um lembrete às 23h e às 8h do dia seguinte.</string>
     <string name="permitir">Permitir sobrepor outros apps</string>
     <string name="iniciar">Iniciar balão</string>
     <string name="parar">Parar balão</string>

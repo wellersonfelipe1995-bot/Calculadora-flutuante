@@ -15,14 +15,18 @@ data class Dia(
     val valor3: Double = 0.0,
     val km: Double = 0.0,
     val kmPorLitro: Double = 0.0,
-    val precoLitro: Double = 0.0
+    val precoLitro: Double = 0.0,
+    val folga: Boolean = false
 ) {
     val bruto: Double get() = valor1 + valor2 + valor3
     val gasto: Double get() = if (kmPorLitro > 0) km / kmPorLitro * precoLitro else 0.0
     val liquido: Double get() = bruto - gasto
+
+    // Conta como registrado se tem algum valor ou foi marcado como dia livre.
+    val registrado: Boolean get() = folga || bruto > 0 || km > 0
 }
 
-class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db", null, 2) {
+class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         criarTabelaDias(db)
@@ -43,6 +47,8 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
             )
             db.execSQL("DROP TABLE corridas")
             db.execSQL("DROP TABLE combustivel")
+        } else if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE dias ADD COLUMN folga INTEGER NOT NULL DEFAULT 0")
         }
     }
 
@@ -55,7 +61,8 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
                 valor3 REAL NOT NULL DEFAULT 0,
                 km REAL NOT NULL DEFAULT 0,
                 km_por_litro REAL NOT NULL DEFAULT 0,
-                preco_litro REAL NOT NULL DEFAULT 0
+                preco_litro REAL NOT NULL DEFAULT 0,
+                folga INTEGER NOT NULL DEFAULT 0
             )"""
         )
     }
@@ -70,6 +77,7 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
             put("km", dia.km)
             put("km_por_litro", dia.kmPorLitro)
             put("preco_litro", dia.precoLitro)
+            put("folga", if (dia.folga) 1 else 0)
         }, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
@@ -97,7 +105,8 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
                             valor3 = c.double("valor3"),
                             km = c.double("km"),
                             kmPorLitro = c.double("km_por_litro"),
-                            precoLitro = c.double("preco_litro")
+                            precoLitro = c.double("preco_litro"),
+                            folga = c.getInt(c.getColumnIndexOrThrow("folga")) == 1
                         )
                     )
                 }

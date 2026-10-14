@@ -20,9 +20,12 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.abs
 
 class FloatingService : Service() {
@@ -41,6 +44,10 @@ class FloatingService : Service() {
     private lateinit var precoLitro: EditText
     private lateinit var gasto: TextView
     private lateinit var percentual: TextView
+    private lateinit var dataSelecionada: TextView
+    private lateinit var diaAnterior: View
+    private lateinit var diaSeguinte: View
+    private lateinit var diaLivre: CheckBox
 
     private lateinit var banco: BancoDados
     private var expandido = false
@@ -87,6 +94,10 @@ class FloatingService : Service() {
         precoLitro = root.findViewById(R.id.precoLitro)
         gasto = root.findViewById(R.id.gasto)
         percentual = root.findViewById(R.id.percentual)
+        dataSelecionada = root.findViewById(R.id.dataSelecionada)
+        diaAnterior = root.findViewById(R.id.diaAnterior)
+        diaSeguinte = root.findViewById(R.id.diaSeguinte)
+        diaLivre = root.findViewById(R.id.diaLivre)
 
         // Qualquer mudança em qualquer caixa grava o dia automaticamente.
         (campos + listOf(km, kmPorLitro, precoLitro)).forEach {
@@ -94,6 +105,15 @@ class FloatingService : Service() {
                 if (!carregando) salvarDia()
                 atualizarTudo()
             })
+        }
+        diaLivre.setOnCheckedChangeListener { _, _ ->
+            if (!carregando) salvarDia()
+            atualizarTudo()
+        }
+        // As setas trocam o dia editado, para lançar dias atrasados (nunca depois de hoje).
+        diaAnterior.setOnClickListener { carregarDia(diaAtual.minusDays(1)) }
+        diaSeguinte.setOnClickListener {
+            if (diaAtual < LocalDate.now()) carregarDia(diaAtual.plusDays(1))
         }
         carregarDia()
 
@@ -130,6 +150,15 @@ class FloatingService : Service() {
         configurarArraste(root.findViewById(R.id.bubble))
 
         windowManager.addView(root, params)
+    }
+
+    // Aberto por um lembrete ou pelo histórico: mostra o painel já no dia pedido.
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.getStringExtra(EXTRA_DATA)?.let { data ->
+            if (!expandido) alternarPainel()
+            carregarDia(LocalDate.parse(data))
+        }
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -191,7 +220,7 @@ class FloatingService : Service() {
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         if (expandido) {
-            // Se a data virou com o balão aberto, começa o registro do dia novo.
+            // Ao tocar no balão, o painel sempre abre no dia de hoje.
             if (diaAtual != LocalDate.now()) carregarDia()
             // Precisa receber foco para o teclado funcionar nas caixas.
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
@@ -237,14 +266,25 @@ class FloatingService : Service() {
         }
         gasto.text = Formato.moeda(gastoCombustivel)
         percentual.text = Formato.percentual(gastoCombustivel, bruto)
+
+        val hoje = LocalDate.now()
+        dataSelecionada.text = when (diaAtual) {
+            hoje -> "Hoje"
+            hoje.minusDays(1) -> "Ontem"
+            else -> diaAtual.format(formatoData)
+        }
+        diaSeguinte.alpha = if (diaAtual < hoje) 1f else 0.3f
+        // Dia livre deixa as caixas apagadas, mas ainda editáveis.
+        val alfa = if (diaLivre.isChecked) 0.4f else 1f
+        (campos + listOf(km, kmPorLitro, precoLitro)).forEach { it.alpha = alfa }
     }
 
     private fun somaCorrida() = campos.sumOf { Formato.lerValor(it.text.toString()) }
 
-    // Mostra o registro de hoje. Num dia novo as caixas começam vazias,
+    // Mostra o registro do dia. Um dia sem registro começa com as caixas vazias,
     // mantendo km/l e preço do litro do último dia salvo.
-    private fun carregarDia() {
-        diaAtual = LocalDate.now()
+    private fun carregarDia(data: LocalDate = LocalDate.now()) {
+        diaAtual = minOf(data, LocalDate.now())
         val dia = banco.buscar(diaAtual)
             ?: banco.ultimoDia()?.let { Dia(diaAtual, kmPorLitro = it.kmPorLitro, precoLitro = it.precoLitro) }
             ?: diaDasPreferenciasAntigas()
@@ -254,6 +294,7 @@ class FloatingService : Service() {
         km.setText(texto(dia.km))
         kmPorLitro.setText(texto(dia.kmPorLitro))
         precoLitro.setText(texto(dia.precoLitro))
+        diaLivre.isChecked = dia.folga
         carregando = false
         atualizarTudo()
     }
@@ -277,12 +318,15 @@ class FloatingService : Service() {
                 valor3 = Formato.lerValor(campos[2].text.toString()),
                 km = Formato.lerValor(km.text.toString()),
                 kmPorLitro = Formato.lerValor(kmPorLitro.text.toString()),
-                precoLitro = Formato.lerValor(precoLitro.text.toString())
+                precoLitro = Formato.lerValor(precoLitro.text.toString()),
+                folga = diaLivre.isChecked
             )
         )
     }
 
     private fun texto(valor: Double) = if (valor == 0.0) "" else Formato.numero(valor)
+
+    private val formatoData = DateTimeFormatter.ofPattern("EEE, dd/MM", Locale.forLanguageTag("pt-BR"))
 
     private fun iniciarEmPrimeiroPlano() {
         val canalId = "balao"
@@ -308,5 +352,9 @@ class FloatingService : Service() {
         } else {
             startForeground(1, notificacao)
         }
+    }
+
+    companion object {
+        const val EXTRA_DATA = "data"
     }
 }

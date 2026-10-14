@@ -39,7 +39,25 @@ A tela inicial do app mostra o histórico agrupado por mês. Cada mês traz o to
 **por fora** (3ª caixa: corridas por fora e gorjetas), bruto, combustível e líquido; abaixo,
 cada dia com os mesmos dados. Segure o dedo sobre um dia para apagá-lo.
 
-O botão **Histórico** no balão abre o app direto nessa lista.
+O botão **Histórico** no balão abre o app direto nessa lista. Tocar num dia do histórico
+abre o balão nele para corrigir.
+
+### Dias atrasados e dia livre
+
+No topo do painel do balão aparece o dia que está sendo editado (**Hoje**, **Ontem**, ...).
+As setas ◀ ▶ trocam o dia, para lançar valores atrasados na data certa. Ao tocar no balão,
+o painel sempre volta para hoje. A caixa **Dia livre** marca folga.
+
+### Lembretes
+
+Se o dia não tiver nenhum valor nem estiver marcado como dia livre, o app avisa
+às **23h** do mesmo dia e às **8h** do dia seguinte. Tocar na notificação abre o balão já no
+dia que ficou sem registro.
+
+### Resumo do mês
+
+Cada mês do histórico mostra: por fora, bruto, combustível, líquido, dias trabalhados,
+dias livres e média por dia trabalhado.
 
 Os dados ficam só no celular: desinstalar o app apaga o histórico.
 

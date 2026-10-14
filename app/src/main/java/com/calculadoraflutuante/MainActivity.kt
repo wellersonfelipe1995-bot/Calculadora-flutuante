@@ -29,6 +29,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         banco = BancoDados(this)
+        Lembretes.agendar(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
@@ -66,11 +67,32 @@ class MainActivity : Activity() {
         setIntent(intent)
     }
 
+    override fun onPostResume() {
+        super.onPostResume()
+        // Vindo de um lembrete: abre o balão no dia que ficou sem registro.
+        intent.getStringExtra(EXTRA_EDITAR_DATA)?.let { data ->
+            intent.removeExtra(EXTRA_EDITAR_DATA)
+            abrirBalaoNoDia(data)
+        }
+    }
+
+    private fun abrirBalaoNoDia(data: String) {
+        if (Settings.canDrawOverlays(this)) {
+            startForegroundService(
+                Intent(this, FloatingService::class.java).putExtra(FloatingService.EXTRA_DATA, data)
+            )
+            moveTaskToBack(true)
+        } else {
+            Toast.makeText(this, R.string.sem_permissao, Toast.LENGTH_LONG).show()
+            abrirPermissaoSobreposicao()
+        }
+    }
+
     private fun mostrarHistorico() {
         val lista = findViewById<LinearLayout>(R.id.historico)
         lista.removeAllViews()
 
-        val dias = banco.todosOsDias().filter { it.bruto > 0 || it.gasto > 0 }
+        val dias = banco.todosOsDias().filter { it.registrado }
         if (dias.isEmpty()) {
             lista.addView(TextView(this).apply {
                 text = "Nenhum dia salvo ainda. Os valores digitados no balão são salvos automaticamente."
@@ -84,12 +106,19 @@ class MainActivity : Activity() {
             val porFora = diasDoMes.sumOf { it.valor3 }
             val bruto = diasDoMes.sumOf { it.bruto }
             val gasto = diasDoMes.sumOf { it.gasto }
+            val trabalhados = diasDoMes.count { !it.folga && it.bruto > 0 }
+            val livres = diasDoMes.count { it.folga }
             lista.addView(TextView(this).apply {
                 text = buildString {
                     append(mes.format(formatoMes).replaceFirstChar { it.uppercase() })
                     append("\nPor fora no mês: ${Formato.moeda(porFora)}")
                     append("\nBruto: ${Formato.moeda(bruto)} · Combustível: ${Formato.moeda(gasto)}")
                     append("\nLíquido: ${Formato.moeda(bruto - gasto)}")
+                    append("\n$trabalhados dia(s) trabalhado(s) · $livres dia(s) livre(s)")
+                    if (trabalhados > 0) {
+                        append("\nMédia por dia trabalhado: ${Formato.moeda(bruto / trabalhados)} bruto")
+                        append(" · ${Formato.moeda((bruto - gasto) / trabalhados)} líquido")
+                    }
                 }
                 textSize = 16f
                 setTypeface(typeface, Typeface.BOLD)
@@ -103,7 +132,9 @@ class MainActivity : Activity() {
 
             diasDoMes.forEach { dia ->
                 lista.addView(TextView(this).apply {
-                    text = buildString {
+                    text = if (dia.folga) {
+                        dia.data.format(formatoData).replaceFirstChar { it.uppercase() } + "\nDia livre"
+                    } else buildString {
                         append(dia.data.format(formatoData).replaceFirstChar { it.uppercase() })
                         append("\nBruto: ${Formato.moeda(dia.bruto)} · Por fora: ${Formato.moeda(dia.valor3)}")
                         append("\nCombustível: ${Formato.moeda(dia.gasto)}")
@@ -112,6 +143,7 @@ class MainActivity : Activity() {
                     }
                     textSize = 15f
                     setPadding(0, (12 * dp).toInt(), 0, (12 * dp).toInt())
+                    setOnClickListener { abrirBalaoNoDia(dia.data.toString()) }
                     setOnLongClickListener {
                         confirmarApagar(dia)
                         true
@@ -152,5 +184,6 @@ class MainActivity : Activity() {
 
     companion object {
         const val EXTRA_HISTORICO = "historico"
+        const val EXTRA_EDITAR_DATA = "editarData"
     }
 }
