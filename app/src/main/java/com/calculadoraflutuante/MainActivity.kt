@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.view.WindowInsets
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -29,6 +30,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         banco = BancoDados(this)
+        respeitarBarrasDoSistema()
         Lembretes.agendar(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -60,6 +62,24 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         banco.close()
+    }
+
+    // No Android 15 a tela ocupa até atrás da barra de status e da barra de navegação;
+    // o espaçamento evita que o texto fique escondido atrás delas.
+    private fun respeitarBarrasDoSistema() {
+        findViewById<View>(R.id.rolagem).setOnApplyWindowInsetsListener { v, insets ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val barras = insets.getInsets(WindowInsets.Type.systemBars())
+                v.setPadding(barras.left, barras.top, barras.right, barras.bottom)
+            } else {
+                @Suppress("DEPRECATION")
+                v.setPadding(
+                    insets.systemWindowInsetLeft, insets.systemWindowInsetTop,
+                    insets.systemWindowInsetRight, insets.systemWindowInsetBottom
+                )
+            }
+            insets
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
