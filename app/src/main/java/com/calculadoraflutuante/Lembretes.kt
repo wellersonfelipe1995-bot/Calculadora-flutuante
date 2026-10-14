@@ -63,8 +63,8 @@ object Lembretes {
         val abrir = PendingIntent.getActivity(
             context,
             data.hashCode(),
-            Intent(context, MainActivity::class.java)
-                .putExtra(MainActivity.EXTRA_EDITAR_DATA, data.toString())
+            Intent(context, HistoricoActivity::class.java)
+                .putExtra(HistoricoActivity.EXTRA_EDITAR_DATA, data.toString())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )

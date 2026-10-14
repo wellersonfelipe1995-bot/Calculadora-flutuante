@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Tema da entrada do ícone: transparente e sem animação, para não piscar tela. -->
+    <style name="Lancador" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+
     <style name="CaixaValor">
         <item name="android:layout_width">58dp</item>
         <item name="android:layout_height">48dp</item>

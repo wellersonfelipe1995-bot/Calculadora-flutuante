@@ -148,8 +148,8 @@ class FloatingService : Service() {
         btnHistorico.setOnClickListener {
             alternarPainel()
             startActivity(
-                Intent(this, MainActivity::class.java)
-                    .putExtra(MainActivity.EXTRA_HISTORICO, true)
+                Intent(this, HistoricoActivity::class.java)
+                    .putExtra(HistoricoActivity.EXTRA_HISTORICO, true)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             )
         }
@@ -416,7 +416,7 @@ class FloatingService : Service() {
 
         val abrirApp = PendingIntent.getActivity(
             this, 0,
-            Intent(this, MainActivity::class.java).putExtra(MainActivity.EXTRA_HISTORICO, true),
+            Intent(this, HistoricoActivity::class.java).putExtra(HistoricoActivity.EXTRA_HISTORICO, true),
             PendingIntent.FLAG_IMMUTABLE
         )
 
