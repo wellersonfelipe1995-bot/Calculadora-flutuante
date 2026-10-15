@@ -73,7 +73,7 @@ object Lembretes {
         val notificacao = Notification.Builder(context, CANAL)
             .setContentTitle("Você não registrou $quando")
             .setContentText("Toque para lançar os ganhos de $quando ou marcar dia livre.")
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notificacao)
             .setContentIntent(abrir)
             .setAutoCancel(true)
             .build()

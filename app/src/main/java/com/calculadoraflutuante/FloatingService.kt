@@ -423,7 +423,7 @@ class FloatingService : Service() {
         val notificacao = Notification.Builder(this, canalId)
             .setContentTitle(getString(R.string.notificacao_titulo))
             .setContentText(getString(R.string.notificacao_texto))
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notificacao)
             .setContentIntent(abrirApp)
             .setOngoing(true)
             .build()
