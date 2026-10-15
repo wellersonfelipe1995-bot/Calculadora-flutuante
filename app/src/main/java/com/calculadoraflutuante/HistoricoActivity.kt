@@ -23,7 +23,7 @@ import java.util.Locale
 class HistoricoActivity : Activity() {
 
     private enum class Aba(val titulo: String, val conteudo: Int, val botao: Int) {
-        INICIO("Meu Ganho", R.id.abaInicio, R.id.botaoInicio),
+        INICIO("Meus Ganhos", R.id.abaInicio, R.id.botaoInicio),
         HISTORICO("Histórico", R.id.abaHistorico, R.id.botaoHistorico),
         DESEMPENHO("Desempenho", R.id.abaDesempenho, R.id.botaoDesempenho),
         AJUSTES("Ajustes", R.id.abaAjustes, R.id.botaoAjustes)
