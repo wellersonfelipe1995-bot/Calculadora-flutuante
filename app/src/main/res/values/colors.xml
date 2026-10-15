@@ -10,4 +10,9 @@
     <color name="texto">#FF1B1F1D</color>
     <color name="texto_secundario">#FF6B7370</color>
     <color name="aba_inativa">#FF8A928F</color>
+    <!-- Cores de cada fonte de ganho no gráfico da aba Desempenho -->
+    <color name="app_urbano">#FF4CAF50</color>
+    <color name="app_99">#FFFFC107</color>
+    <color name="app_por_fora">#FF1E88E5</color>
+    <color name="trilho_grafico">#FFE8ECEA</color>
 </resources>

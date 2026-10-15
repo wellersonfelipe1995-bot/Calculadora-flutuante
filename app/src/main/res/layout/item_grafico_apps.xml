@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Card "Ganhos por app": rosca com o bruto no meio e legenda com valor e %. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="20dp"
+    android:background="@drawable/card_day_bg"
+    android:elevation="1dp"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ganhos por app"
+        android:textColor="@color/texto"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <com.calculadoraflutuante.GraficoRosca
+            android:id="@+id/rosca"
+            android:layout_width="128dp"
+            android:layout_height="128dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <include android:id="@+id/legendaUrbano" layout="@layout/item_legenda_app" />
+            <include android:id="@+id/legenda99" layout="@layout/item_legenda_app" />
+            <include android:id="@+id/legendaPorFora" layout="@layout/item_legenda_app" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

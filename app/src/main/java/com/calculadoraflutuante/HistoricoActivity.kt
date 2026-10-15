@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -181,7 +182,10 @@ class HistoricoActivity : Activity() {
         findViewById<ViewGroup>(R.id.desempenho).apply {
             removeAllViews()
             if (dias.isEmpty()) addView(textoVazio())
-            porMes.forEach { (mes, diasDoMes) -> addView(cardResumoMes(this, mes, diasDoMes)) }
+            porMes.forEach { (mes, diasDoMes) ->
+                addView(cardResumoMes(this, mes, diasDoMes))
+                addView(cardGraficoApps(this, diasDoMes))
+            }
         }
     }
 
@@ -201,6 +205,35 @@ class HistoricoActivity : Activity() {
         card.texto(R.id.media, if (trabalhados > 0) Formato.moeda((bruto - gasto) / trabalhados) else "—")
         card.texto(R.id.dias, "${plural(trabalhados, "dia trabalhado", "dias trabalhados")} · " +
             plural(livres, "dia livre", "dias livres"))
+        return card
+    }
+
+    // Rosca com quanto veio de cada fonte: 1ª caixa (Urbano Norte), 2ª (99) e 3ª (por fora).
+    private fun cardGraficoApps(pai: ViewGroup, diasDoMes: List<Dia>): View {
+        val card = layoutInflater.inflate(R.layout.item_grafico_apps, pai, false)
+        val fontes = listOf(
+            Triple("Urbano Norte", diasDoMes.sumOf { it.valor1 }, getColor(R.color.app_urbano)),
+            Triple("99", diasDoMes.sumOf { it.valor2 }, getColor(R.color.app_99)),
+            Triple("Por fora", diasDoMes.sumOf { it.valor3 }, getColor(R.color.app_por_fora))
+        )
+        val total = fontes.sumOf { it.second }
+
+        card.findViewById<GraficoRosca>(R.id.rosca).definir(
+            valores = fontes.map { it.second },
+            cores = fontes.map { it.third },
+            textoCentro = Formato.moeda(total),
+            legendaCentro = "bruto"
+        )
+
+        listOf(R.id.legendaUrbano, R.id.legenda99, R.id.legendaPorFora).zip(fontes).forEach { (id, fonte) ->
+            val (nome, valor, cor) = fonte
+            val linha = card.findViewById<View>(id)
+            linha.findViewById<View>(R.id.ponto).background =
+                GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(cor) }
+            linha.texto(R.id.nome, nome)
+            linha.texto(R.id.valor, Formato.moeda(valor))
+            linha.texto(R.id.percentual, Formato.percentual(valor, total))
+        }
         return card
     }
 
