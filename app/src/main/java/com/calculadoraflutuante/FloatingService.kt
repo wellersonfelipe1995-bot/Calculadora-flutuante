@@ -54,6 +54,9 @@ class FloatingService : Service() {
     private lateinit var lixeira: ImageView
     private lateinit var banco: BancoDados
     private var expandido = false
+    // Posição do balão antes de abrir o painel, para voltar a ela ao fechar.
+    // Fica nula se o usuário arrastar o painel aberto (aí ele fica onde foi solto).
+    private var xAntesDeAbrir: Int? = null
     private var diaAtual: LocalDate = LocalDate.now()
     private var carregando = false
     private var confirmandoLimpeza = false
@@ -249,6 +252,7 @@ class FloatingService : Service() {
                         lixeira.visibility = View.VISIBLE
                     }
                     if (arrastou) {
+                        xAntesDeAbrir = null
                         params.x = (inicioX + dx).toInt()
                         params.y = (inicioY + dy).toInt()
                         windowManager.updateViewLayout(root, params)
@@ -295,7 +299,8 @@ class FloatingService : Service() {
             // Precisa receber foco para o teclado funcionar nas caixas.
             params.flags = params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
             windowManager.updateViewLayout(root, params)
-            root.post { manterNaTela() }
+            xAntesDeAbrir = params.x
+            root.post { centralizar() }
             val campo = campos.firstOrNull { it.text.isEmpty() } ?: campos.first()
             campo.requestFocus()
             campo.postDelayed({ imm.showSoftInput(campo, InputMethodManager.SHOW_IMPLICIT) }, 150)
@@ -304,18 +309,18 @@ class FloatingService : Service() {
             cancelarLimpeza.run()
             imm.hideSoftInputFromWindow(root.windowToken, 0)
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            xAntesDeAbrir?.let { params.x = it }
+            xAntesDeAbrir = null
             windowManager.updateViewLayout(root, params)
         }
     }
 
-    // Evita que o painel aberto fique cortado na borda direita da tela.
-    private fun manterNaTela() {
+    // Painel aberto fica centralizado na largura da tela.
+    private fun centralizar() {
+        if (!expandido) return
         val larguraTela = resources.displayMetrics.widthPixels
-        val maxX = (larguraTela - root.width).coerceAtLeast(0)
-        if (params.x > maxX || params.x < 0) {
-            params.x = params.x.coerceIn(0, maxX)
-            windowManager.updateViewLayout(root, params)
-        }
+        params.x = ((larguraTela - root.width) / 2).coerceAtLeast(0)
+        windowManager.updateViewLayout(root, params)
     }
 
     private fun observador(aoMudar: () -> Unit) = object : TextWatcher {
