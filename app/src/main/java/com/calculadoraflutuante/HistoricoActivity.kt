@@ -247,6 +247,7 @@ class HistoricoActivity : Activity() {
             card.elevation = 0f
             card.alpha = 0.6f
             card.findViewById<View>(R.id.detalhes).visibility = View.GONE
+            card.findViewById<View>(R.id.apps).visibility = View.GONE
             card.findViewById<TextView>(R.id.liquido).apply {
                 text = "Dia livre"
                 setTextColor(getColor(R.color.texto_secundario))
@@ -254,6 +255,9 @@ class HistoricoActivity : Activity() {
             }
         } else {
             card.texto(R.id.liquido, Formato.moeda(dia.liquido))
+            card.texto(R.id.appUrbano, Formato.moeda(dia.valor1))
+            card.texto(R.id.app99, Formato.moeda(dia.valor2))
+            card.texto(R.id.appFora, Formato.moeda(dia.valor3))
             card.texto(R.id.bruto, Formato.moeda(dia.bruto))
             card.texto(R.id.porFora, Formato.moeda(dia.valor3))
             card.texto(R.id.rotuloCombustivel, "Combustível · ${"%.0f".format(dia.km)} km")

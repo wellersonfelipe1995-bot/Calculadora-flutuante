@@ -127,6 +127,18 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <!-- Valor de um app no card do dia (bolinha da cor + valor) -->
+    <style name="ValorApp">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:drawablePadding">6dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@color/texto</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
     <!-- Abas inferiores -->
     <style name="Aba">
         <item name="android:layout_width">0dp</item>
