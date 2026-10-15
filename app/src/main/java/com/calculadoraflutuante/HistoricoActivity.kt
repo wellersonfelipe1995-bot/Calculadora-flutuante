@@ -203,6 +203,12 @@ class HistoricoActivity : Activity() {
         card.texto(R.id.combustivel, Formato.moeda(gasto))
         card.texto(R.id.porFora, Formato.moeda(diasDoMes.sumOf { it.valor3 }))
         card.texto(R.id.media, if (trabalhados > 0) Formato.moeda((bruto - gasto) / trabalhados) else "—")
+        // Média do mês por km: só entram os dias com km lançado, senão o bruto
+        // de um dia sem km inflaria o resultado.
+        val comKm = diasDoMes.filter { it.km > 0 }
+        val kmTotal = comKm.sumOf { it.km }
+        card.texto(R.id.ganhoPorKm, if (kmTotal > 0) "${Formato.moeda(comKm.sumOf { it.bruto } / kmTotal)}/km" else "—")
+        card.texto(R.id.kmMes, if (kmTotal > 0) "${"%.0f".format(kmTotal)} km" else "—")
         card.texto(R.id.dias, "${plural(trabalhados, "dia trabalhado", "dias trabalhados")} · " +
             plural(livres, "dia livre", "dias livres"))
         return card

@@ -69,6 +69,23 @@
         </LinearLayout>
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <LinearLayout style="@style/ColunaResumo">
+            <TextView style="@style/RotuloResumo" android:text="Ganho por km" />
+            <TextView android:id="@+id/ganhoPorKm" style="@style/ValorResumo" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/ColunaResumo">
+            <TextView style="@style/RotuloResumo" android:text="km rodados" />
+            <TextView android:id="@+id/kmMes" style="@style/ValorResumo" />
+        </LinearLayout>
+    </LinearLayout>
+
     <TextView
         android:id="@+id/dias"
         style="@style/RotuloResumo"
