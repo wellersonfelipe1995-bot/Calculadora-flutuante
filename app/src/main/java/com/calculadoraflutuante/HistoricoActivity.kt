@@ -259,7 +259,8 @@ class HistoricoActivity : Activity() {
             card.texto(R.id.app99, Formato.moeda(dia.valor2))
             card.texto(R.id.appFora, Formato.moeda(dia.valor3))
             card.texto(R.id.bruto, Formato.moeda(dia.bruto))
-            card.texto(R.id.porFora, Formato.moeda(dia.valor3))
+            // Bruto dividido pelos km rodados; sem km lançado não dá para calcular.
+            card.texto(R.id.ganhoPorKm, if (dia.km > 0) "${Formato.moeda(dia.bruto / dia.km)}/km" else "—")
             card.texto(R.id.rotuloCombustivel, "Combustível · ${"%.0f".format(dia.km)} km")
             card.texto(R.id.combustivel, "${Formato.moeda(dia.gasto)} (${Formato.percentual(dia.gasto, dia.bruto)})")
         }

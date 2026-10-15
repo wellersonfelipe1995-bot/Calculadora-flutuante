@@ -60,8 +60,8 @@
         </LinearLayout>
 
         <LinearLayout style="@style/ColunaDia">
-            <TextView style="@style/RotuloDia" android:text="Por fora" />
-            <TextView android:id="@+id/porFora" style="@style/ValorDia" />
+            <TextView style="@style/RotuloDia" android:text="Ganho por km" />
+            <TextView android:id="@+id/ganhoPorKm" style="@style/ValorDia" />
         </LinearLayout>
 
         <LinearLayout style="@style/ColunaDia">
