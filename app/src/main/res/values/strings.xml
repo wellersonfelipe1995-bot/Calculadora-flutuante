@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Calculadora Flutuante</string>
+    <string name="app_name">Meu Ganho</string>
     <string name="instrucoes">Toque em \"Iniciar balão\" e depois abra seu app de corridas. Toque no balão para abrir a calculadora e vá somando os ganhos do dia nas caixas. Tudo é salvo automaticamente, um registro por dia. Use as setas ◀ ▶ do balão para lançar dias atrasados e marque \"Dia livre\" nos dias de folga. Se um dia ficar sem registro, você recebe um lembrete às 23h e às 8h do dia seguinte.</string>
     <string name="permitir">Permitir sobrepor outros apps</string>
     <string name="iniciar">Iniciar balão</string>
     <string name="parar">Parar balão</string>
     <string name="sem_permissao">Conceda a permissão de sobreposição primeiro.</string>
-    <string name="notificacao_titulo">Calculadora flutuante ativa</string>
+    <string name="notificacao_titulo">Meu Ganho está ativo</string>
     <string name="notificacao_texto">Toque para ver o histórico</string>
     <string name="lembretes">Se um dia ficar sem nenhum valor e sem a marcação de Dia livre, você recebe uma notificação às 23h e outra às 8h do dia seguinte. Tocar nela abre o balão no dia que ficou faltando.\n\nPara os lembretes funcionarem, deixe as notificações do app permitidas e, em celulares Xiaomi, Samsung e parecidos, ajuste a bateria do app para \"Sem restrições\".</string>
 </resources>

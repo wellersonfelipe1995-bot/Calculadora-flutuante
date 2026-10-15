@@ -1,4 +1,4 @@
-# Calculadora Flutuante
+# Meu Ganho
 
 App Android com um balão flutuante que fica por cima de qualquer app (Uber, 99, inDrive...).
 Toque no balão e abre uma linha com **3 caixas que se somam** e **1 caixa com o resultado**,
@@ -19,7 +19,7 @@ mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
 
 ## Como usar
 
-1. Abra o app **Calculadora Flutuante**.
+1. Abra o app **Meu Ganho**.
 2. Toque em **Permitir sobrepor outros apps** e ative a permissão.
 3. Toque em **Iniciar balão**. O balão verde "R$" aparece na tela. Das próximas vezes,
    abrir o app pelo ícone já liga o balão direto; a tela do app (com o histórico) abre
