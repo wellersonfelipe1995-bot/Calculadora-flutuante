@@ -59,13 +59,13 @@
         android:orientation="horizontal">
 
         <LinearLayout style="@style/ColunaResumo">
-            <TextView style="@style/RotuloResumo" android:text="Por fora" />
-            <TextView android:id="@+id/porFora" style="@style/ValorResumo" />
+            <TextView style="@style/RotuloResumo" android:text="Média líquida / dia" />
+            <TextView android:id="@+id/media" style="@style/ValorResumo" />
         </LinearLayout>
 
         <LinearLayout style="@style/ColunaResumo">
-            <TextView style="@style/RotuloResumo" android:text="Média líquida / dia" />
-            <TextView android:id="@+id/media" style="@style/ValorResumo" />
+            <TextView style="@style/RotuloResumo" android:text="Ganho por km" />
+            <TextView android:id="@+id/ganhoPorKm" style="@style/ValorResumo" />
         </LinearLayout>
     </LinearLayout>
 
@@ -76,13 +76,13 @@
         android:orientation="horizontal">
 
         <LinearLayout style="@style/ColunaResumo">
-            <TextView style="@style/RotuloResumo" android:text="Ganho por km" />
-            <TextView android:id="@+id/ganhoPorKm" style="@style/ValorResumo" />
+            <TextView style="@style/RotuloResumo" android:text="km rodados" />
+            <TextView android:id="@+id/kmMes" style="@style/ValorResumo" />
         </LinearLayout>
 
         <LinearLayout style="@style/ColunaResumo">
-            <TextView style="@style/RotuloResumo" android:text="km rodados" />
-            <TextView android:id="@+id/kmMes" style="@style/ValorResumo" />
+            <TextView style="@style/RotuloResumo" android:text="Média km / dia" />
+            <TextView android:id="@+id/kmPorDia" style="@style/ValorResumo" />
         </LinearLayout>
     </LinearLayout>
 
