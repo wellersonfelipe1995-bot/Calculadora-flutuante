@@ -109,6 +109,10 @@ class FloatingService : Service() {
         diaSeguinte = root.findViewById(R.id.diaSeguinte)
         diaLivre = root.findViewById(R.id.diaLivre)
 
+        // km/l e preço do litro: só números, a vírgula entra sozinha (58 → 5,8; 465 → 4,65).
+        kmPorLitro.addTextChangedListener(MascaraDecimal(kmPorLitro, casas = 1, maxDigitos = 3))
+        precoLitro.addTextChangedListener(MascaraDecimal(precoLitro, casas = 2, maxDigitos = 4))
+
         // Qualquer mudança em qualquer caixa grava o dia automaticamente.
         (campos + listOf(km, kmPorLitro, precoLitro)).forEach {
             it.addTextChangedListener(observador {
@@ -376,8 +380,8 @@ class FloatingService : Service() {
         carregando = true
         listOf(dia.valor1, dia.valor2, dia.valor3).forEachIndexed { i, v -> campos[i].setText(texto(v)) }
         km.setText(texto(dia.km))
-        kmPorLitro.setText(texto(dia.kmPorLitro))
-        precoLitro.setText(texto(dia.precoLitro))
+        kmPorLitro.setText(MascaraDecimal.formatar(dia.kmPorLitro, 1))
+        precoLitro.setText(MascaraDecimal.formatar(dia.precoLitro, 2))
         diaLivre.isChecked = dia.folga
         carregando = false
         atualizarTudo()
