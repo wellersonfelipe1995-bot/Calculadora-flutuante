@@ -5,9 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
@@ -24,6 +27,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -50,6 +54,7 @@ class FloatingService : Service() {
     private lateinit var diaAnterior: View
     private lateinit var diaSeguinte: View
     private lateinit var diaLivre: CheckBox
+    private lateinit var botaoCompartilhar: View
 
     private lateinit var lixeira: ImageView
     private lateinit var banco: BancoDados
@@ -108,6 +113,8 @@ class FloatingService : Service() {
         diaAnterior = root.findViewById(R.id.diaAnterior)
         diaSeguinte = root.findViewById(R.id.diaSeguinte)
         diaLivre = root.findViewById(R.id.diaLivre)
+        botaoCompartilhar = root.findViewById(R.id.compartilhar)
+        botaoCompartilhar.setOnClickListener { compartilhar() }
 
         // km/l e preço do litro: só números, a vírgula entra sozinha (58 → 5,8; 465 → 4,65).
         kmPorLitro.addTextChangedListener(MascaraDecimal(kmPorLitro, casas = 1, maxDigitos = 3))
@@ -415,6 +422,49 @@ class FloatingService : Service() {
     private fun texto(valor: Double) = if (valor == 0.0) "" else Formato.numero(valor)
 
     private val formatoData = DateTimeFormatter.ofPattern("EEE, dd/MM", Locale.forLanguageTag("pt-BR"))
+
+    // Tira uma "foto" do card com os valores do momento e abre o compartilhamento do Android.
+    private fun compartilhar() {
+        // Na imagem: data de verdade no lugar de "Hoje", sem setas, botão e cursor.
+        val textoData = dataSelecionada.text
+        dataSelecionada.text = diaAtual.format(formatoData).replaceFirstChar { it.uppercase() }
+        val escondidos = listOf(diaAnterior, diaSeguinte, botaoCompartilhar)
+        val visibilidades = escondidos.map { it.visibility }
+        escondidos.forEach { it.visibility = View.INVISIBLE }
+        val caixas = campos + listOf(km, kmPorLitro, precoLitro)
+        caixas.forEach { it.isCursorVisible = false }
+
+        val imagem = Bitmap.createBitmap(panel.width, panel.height, Bitmap.Config.ARGB_8888)
+        Canvas(imagem).apply {
+            drawColor(0xFF212121.toInt())
+            panel.draw(this)
+        }
+
+        dataSelecionada.text = textoData
+        escondidos.zip(visibilidades).forEach { (v, vis) -> v.visibility = vis }
+        caixas.forEach { it.isCursorVisible = true }
+
+        val nome = "meus-ganhos.png"
+        File(ImagemProvider.pasta(cacheDir), nome).outputStream().use {
+            imagem.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+        imagem.recycle()
+
+        // Recolhe o painel para a lista de compartilhamento aparecer sem nada por cima.
+        if (expandido) alternarPainel()
+
+        val uri = ImagemProvider.uri(nome)
+        val envio = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            clipData = ClipData.newRawUri("", uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(
+            Intent.createChooser(envio, "Compartilhar ganhos")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        )
+    }
 
     private fun iniciarEmPrimeiroPlano() {
         val canalId = "balao"

@@ -38,6 +38,12 @@
                 android:value="Balão flutuante de calculadora sobre outros apps" />
         </service>
 
+        <provider
+            android:name=".ImagemProvider"
+            android:authorities="com.calculadoraflutuante.imagens"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
         <receiver
             android:name=".LembreteReceiver"
             android:exported="true">
