@@ -25,9 +25,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Pilha própria: assim, com o histórico aberto nos recentes, o ícone do app
+             continua abrindo o balão em vez de só trazer o histórico de volta. -->
         <activity
             android:name=".HistoricoActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:taskAffinity="com.calculadoraflutuante.historico" />
 
         <service
             android:name=".FloatingService"

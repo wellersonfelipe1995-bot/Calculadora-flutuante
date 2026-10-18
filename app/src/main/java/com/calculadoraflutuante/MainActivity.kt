@@ -19,7 +19,7 @@ class MainActivity : Activity() {
                     .putExtra(FloatingService.EXTRA_DATA, LocalDate.now().toString())
             )
         } else {
-            startActivity(Intent(this, HistoricoActivity::class.java))
+            startActivity(Intent(this, HistoricoActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         finish()
         @Suppress("DEPRECATION")
