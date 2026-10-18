@@ -84,26 +84,52 @@
                 style="@style/Seta"
                 android:text="▶" />
 
-            <CheckBox
-                android:id="@+id/diaLivre"
+            <!-- Dia livre e compartilhar; na imagem compartilhada dão lugar ao líquido do dia -->
+            <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:buttonTint="#FFFFFFFF"
-                android:text="Dia livre"
-                android:textColor="#FFFFFFFF"
-                android:textSize="14sp" />
+                android:layout_marginStart="12dp">
 
-            <!-- Compartilha uma imagem deste card (WhatsApp etc.) -->
-            <ImageView
-                android:id="@+id/compartilhar"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginStart="4dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Compartilhar"
-                android:padding="6dp"
-                android:src="@drawable/ic_compartilhar" />
+                <LinearLayout
+                    android:id="@+id/acoesData"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/diaLivre"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="#FFFFFFFF"
+                        android:text="Dia livre"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="14sp" />
+
+                    <!-- Compartilha uma imagem deste card (WhatsApp etc.) -->
+                    <ImageView
+                        android:id="@+id/compartilhar"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="4dp"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Compartilhar"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_compartilhar" />
+                </LinearLayout>
+
+                <!-- Só aparece na imagem compartilhada -->
+                <TextView
+                    android:id="@+id/liquidoImagem"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:textColor="#FFA5D6A7"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="invisible" />
+            </FrameLayout>
         </LinearLayout>
 
         <!-- Linha 1: ganhos das corridas -->

@@ -55,6 +55,8 @@ class FloatingService : Service() {
     private lateinit var diaSeguinte: View
     private lateinit var diaLivre: CheckBox
     private lateinit var botaoCompartilhar: View
+    private lateinit var acoesData: View
+    private lateinit var liquidoImagem: TextView
 
     private lateinit var lixeira: ImageView
     private lateinit var banco: BancoDados
@@ -114,6 +116,8 @@ class FloatingService : Service() {
         diaSeguinte = root.findViewById(R.id.diaSeguinte)
         diaLivre = root.findViewById(R.id.diaLivre)
         botaoCompartilhar = root.findViewById(R.id.compartilhar)
+        acoesData = root.findViewById(R.id.acoesData)
+        liquidoImagem = root.findViewById(R.id.liquidoImagem)
         botaoCompartilhar.setOnClickListener { compartilhar() }
 
         // km/l e preço do litro: só números, a vírgula entra sozinha (58 → 5,8; 465 → 4,65).
@@ -351,6 +355,7 @@ class FloatingService : Service() {
             0.0
         }
         gasto.text = Formato.moeda(gastoCombustivel)
+        liquidoImagem.text = "Líquido ${Formato.moeda(bruto - gastoCombustivel)}"
         percentual.text = Formato.percentual(gastoCombustivel, bruto)
 
         val hoje = LocalDate.now()
@@ -428,7 +433,9 @@ class FloatingService : Service() {
         // Na imagem: data de verdade no lugar de "Hoje", sem setas, botão e cursor.
         val textoData = dataSelecionada.text
         dataSelecionada.text = diaAtual.format(formatoData).replaceFirstChar { it.uppercase() }
-        val escondidos = listOf(diaAnterior, diaSeguinte, botaoCompartilhar)
+        // "Dia livre" e o botão não interessam a quem recebe: no lugar deles vai o líquido.
+        val escondidos = listOf(diaAnterior, diaSeguinte, acoesData)
+        liquidoImagem.visibility = View.VISIBLE
         val visibilidades = escondidos.map { it.visibility }
         escondidos.forEach { it.visibility = View.INVISIBLE }
         val caixas = campos + listOf(km, kmPorLitro, precoLitro)
@@ -442,6 +449,7 @@ class FloatingService : Service() {
 
         dataSelecionada.text = textoData
         escondidos.zip(visibilidades).forEach { (v, vis) -> v.visibility = vis }
+        liquidoImagem.visibility = View.INVISIBLE
         caixas.forEach { it.isCursorVisible = true }
 
         val nome = "meus-ganhos.png"
