@@ -15,6 +15,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.text.Editable
+import android.text.InputFilter
 import android.text.TextWatcher
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -135,7 +136,12 @@ class FloatingService : Service() {
         botaoCompartilhar.setOnClickListener { compartilhar() }
 
         // km/l e preço do litro: só números, a vírgula entra sozinha (58 → 5,8; 465 → 4,65).
-        kmPorLitro.addTextChangedListener(MascaraDecimal(kmPorLitro, casas = 1, maxDigitos = 3))
+        kmPorLitro.addTextChangedListener(MascaraDecimal(kmPorLitro, casas = 1, maxDigitos = 2))
+        // km: só números inteiros, até 4 dígitos (9999 km).
+        km.filters = arrayOf(InputFilter { origem, inicio, fim, _, _, _ ->
+            val digitos = origem.subSequence(inicio, fim).filter { it.isDigit() }
+            if (digitos.length == fim - inicio) null else digitos
+        }, InputFilter.LengthFilter(4))
         precoLitro.addTextChangedListener(MascaraDecimal(precoLitro, casas = 2, maxDigitos = 4))
 
         // Qualquer mudança em qualquer caixa grava o dia automaticamente.
@@ -433,7 +439,7 @@ class FloatingService : Service() {
         val kmJunto = kmAnterior + Formato.lerValor(km.text.toString())
         kmAnterior = 0.0
         gastoAnterior = 0.0
-        km.setText(texto(kmJunto))  // salva o dia e atualiza a tela
+        km.setText(textoKm(kmJunto))  // salva o dia e atualiza a tela
         Toast.makeText(this, "Abastecimento desfeito: km somados de volta numa linha só", Toast.LENGTH_SHORT).show()
     }
 
@@ -451,7 +457,7 @@ class FloatingService : Service() {
         gastoAnterior = dia.gastoAnterior
         carregando = true
         listOf(dia.valor1, dia.valor2, dia.valor3).forEachIndexed { i, v -> campos[i].setText(texto(v)) }
-        km.setText(texto(dia.km))
+        km.setText(textoKm(dia.km))
         kmPorLitro.setText(MascaraDecimal.formatar(dia.kmPorLitro, 1))
         precoLitro.setText(MascaraDecimal.formatar(dia.precoLitro, 2))
         diaLivre.isChecked = dia.folga
@@ -485,6 +491,8 @@ class FloatingService : Service() {
             )
         )
     }
+
+    private fun textoKm(valor: Double) = if (valor <= 0.0) "" else "%.0f".format(valor)
 
     private fun texto(valor: Double) = if (valor == 0.0) "" else Formato.numero(valor)
 
