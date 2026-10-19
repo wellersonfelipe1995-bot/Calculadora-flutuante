@@ -41,6 +41,17 @@
         <item name="android:textSize">11sp</item>
     </style>
 
+    <!-- Botões em pílula do painel do balão (Abasteci, Histórico, Sair) -->
+    <style name="BotaoPainel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:background">@drawable/botao_abasteci_bg</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
     <style name="Seta">
         <item name="android:layout_width">36dp</item>
         <item name="android:layout_height">36dp</item>

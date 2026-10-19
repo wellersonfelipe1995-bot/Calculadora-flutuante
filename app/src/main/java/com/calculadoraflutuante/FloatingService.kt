@@ -23,7 +23,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
@@ -42,9 +41,8 @@ class FloatingService : Service() {
     private lateinit var root: View
     private lateinit var params: WindowManager.LayoutParams
     private lateinit var panel: View
-    private lateinit var btnLimpar: Button
-    private lateinit var btnFechar: Button
-    private lateinit var btnHistorico: Button
+    private lateinit var btnFechar: View
+    private lateinit var btnHistorico: View
     private lateinit var campos: List<EditText>
     private lateinit var resultado: TextView
     private lateinit var km: EditText
@@ -60,6 +58,7 @@ class FloatingService : Service() {
     private lateinit var acoesData: View
     private lateinit var liquidoImagem: TextView
     private lateinit var linhaAbastecer: View
+    private lateinit var linhaBotoes: View
     private lateinit var btnAbasteci: View
     private lateinit var btnDesfazer: View
     private lateinit var infoAbastecido: TextView
@@ -75,8 +74,6 @@ class FloatingService : Service() {
     private var xAntesDeAbrir: Int? = null
     private var diaAtual: LocalDate = LocalDate.now()
     private var carregando = false
-    private var confirmandoLimpeza = false
-    private lateinit var cancelarLimpeza: Runnable
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -105,7 +102,6 @@ class FloatingService : Service() {
 
         banco = BancoDados(this)
         panel = root.findViewById(R.id.panel)
-        btnLimpar = root.findViewById(R.id.btnLimpar)
         btnFechar = root.findViewById(R.id.btnFechar)
         btnHistorico = root.findViewById(R.id.btnHistorico)
         resultado = root.findViewById(R.id.resultado)
@@ -128,6 +124,7 @@ class FloatingService : Service() {
         acoesData = root.findViewById(R.id.acoesData)
         liquidoImagem = root.findViewById(R.id.liquidoImagem)
         linhaAbastecer = root.findViewById(R.id.linhaAbastecer)
+        linhaBotoes = root.findViewById(R.id.linhaBotoes)
         btnAbasteci = root.findViewById(R.id.btnAbasteci)
         btnDesfazer = root.findViewById(R.id.btnDesfazer)
         infoAbastecido = root.findViewById(R.id.infoAbastecido)
@@ -162,26 +159,6 @@ class FloatingService : Service() {
         }
         carregarDia()
 
-        // Limpar pede confirmação: o 1º toque vira "Confirmar?", o 2º (em até 3 s) apaga.
-        val corOriginal = btnLimpar.textColors
-        cancelarLimpeza = Runnable {
-            confirmandoLimpeza = false
-            btnLimpar.text = "Limpar"
-            btnLimpar.setTextColor(corOriginal)
-        }
-        btnLimpar.setOnClickListener {
-            if (!confirmandoLimpeza) {
-                confirmandoLimpeza = true
-                btnLimpar.text = "Confirmar?"
-                btnLimpar.setTextColor(0xFFC62828.toInt())
-                btnLimpar.postDelayed(cancelarLimpeza, 3000)
-            } else {
-                btnLimpar.removeCallbacks(cancelarLimpeza)
-                cancelarLimpeza.run()
-                campos.forEach { it.text.clear() }
-                campos.first().requestFocus()
-            }
-        }
         btnFechar.setOnClickListener { stopSelf() }
         btnHistorico.setOnClickListener {
             alternarPainel()
@@ -323,9 +300,6 @@ class FloatingService : Service() {
         expandido = !expandido
         val visibilidade = if (expandido) View.VISIBLE else View.GONE
         panel.visibility = visibilidade
-        btnLimpar.visibility = visibilidade
-        btnFechar.visibility = visibilidade
-        btnHistorico.visibility = visibilidade
 
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         if (expandido) {
@@ -340,8 +314,6 @@ class FloatingService : Service() {
             campo.requestFocus()
             campo.postDelayed({ imm.showSoftInput(campo, InputMethodManager.SHOW_IMPLICIT) }, 150)
         } else {
-            btnLimpar.removeCallbacks(cancelarLimpeza)
-            cancelarLimpeza.run()
             imm.hideSoftInputFromWindow(root.windowToken, 0)
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
             xAntesDeAbrir?.let { params.x = it }
@@ -375,10 +347,10 @@ class FloatingService : Service() {
         percentual.text = Formato.percentual(gastoCombustivel, bruto)
         if (kmAnterior > 0) {
             infoAbastecido.text = "+ ${Formato.moeda(gastoAnterior)} de ${"%.0f".format(kmAnterior)} km antes de abastecer"
-            btnDesfazer.visibility = View.VISIBLE
+            linhaAbastecer.visibility = View.VISIBLE
         } else {
             infoAbastecido.text = ""
-            btnDesfazer.visibility = View.GONE
+            linhaAbastecer.visibility = View.GONE
         }
 
         val hoje = LocalDate.now()
@@ -504,7 +476,7 @@ class FloatingService : Service() {
         val textoData = dataSelecionada.text
         dataSelecionada.text = diaAtual.format(formatoData).replaceFirstChar { it.uppercase() }
         // "Dia livre" e o botão não interessam a quem recebe: no lugar deles vai o líquido.
-        val escondidos = listOf(diaAnterior, diaSeguinte, acoesData, btnAbasteci, btnDesfazer)
+        val escondidos = listOf(diaAnterior, diaSeguinte, acoesData, btnDesfazer)
         liquidoImagem.visibility = View.VISIBLE
         val visibilidades = escondidos.map { it.visibility }
         escondidos.forEach { it.visibility = View.INVISIBLE }
@@ -516,11 +488,9 @@ class FloatingService : Service() {
             drawColor(0xFF212121.toInt())
             panel.draw(this)
         }
-        // Sem trecho de abastecimento, a linha do "Abasteci" ficaria vazia: corta fora.
-        val imagem = if (kmAnterior > 0) cheia else {
-            val altura = (linhaAbastecer.top + 4 * resources.displayMetrics.density).toInt().coerceAtMost(cheia.height)
-            Bitmap.createBitmap(cheia, 0, 0, cheia.width, altura).also { if (it !== cheia) cheia.recycle() }
-        }
+        // A linha de botões (Abasteci, Histórico, Sair) não interessa a quem recebe: corta fora.
+        val altura = (linhaBotoes.top + 2 * resources.displayMetrics.density).toInt().coerceAtMost(cheia.height)
+        val imagem = Bitmap.createBitmap(cheia, 0, 0, cheia.width, altura).also { if (it !== cheia) cheia.recycle() }
 
         dataSelecionada.text = textoData
         escondidos.zip(visibilidades).forEach { (v, vis) -> v.visibility = vis }

@@ -5,7 +5,7 @@ Toque no balão e abre uma linha com **3 caixas que se somam** e **1 caixa com o
 para calcular quanto você ganhou na corrida sem sair do app de corridas.
 
 ```
- (R$)  [Limpar] [Sair]
+ (R$)
 ┌───────────────────────────────────────────┐
 │ [ 12,50 ] + [ 3,00 ] + [ 2 ]    = R$ 17,50 │
 │ [ 120 ]   ÷ [ 12 ]   × [ 6,00 ] = R$ 60,00 │
@@ -15,7 +15,7 @@ para calcular quanto você ganhou na corrida sem sair do app de corridas.
 A segunda linha calcula o gasto com combustível do dia:
 **km rodados ÷ km/l × preço do litro = gasto**. Abaixo do gasto aparece quanto
 ele representa, em %, do ganho bruto (soma da primeira linha). Esses três valores ficam salvos
-mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
+mesmo fechando o balão.
 
 ## Como usar
 
@@ -25,8 +25,8 @@ mesmo fechando o balão; o botão **Limpar** apaga só os valores das corridas.
    abrir o app pelo ícone já liga o balão direto; a tela do app (com o histórico) abre
    pelo botão **Histórico** do balão ou pela notificação.
 4. Abra o app de corridas. Toque no balão para abrir/fechar a calculadora.
-5. Arraste o balão para mudar de lugar. **Limpar** zera os ganhos do dia (toque duas vezes:
-   o primeiro toque pede confirmação), **Sair** fecha o balão. Também dá para fechar arrastando o balão até a
+5. Arraste o balão para mudar de lugar. Embaixo do painel ficam **⛽ Abasteci**, **Histórico** e
+   **Sair** (que fecha o balão; arrastar o balão até a lixeira faz o mesmo).
    lixeira que aparece no pé da tela.
 
 Aceita vírgula ou ponto como decimal (`12,50` ou `12.50`).
