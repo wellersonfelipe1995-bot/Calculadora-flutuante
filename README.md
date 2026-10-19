@@ -27,7 +27,6 @@ mesmo fechando o balão.
 4. Abra o app de corridas. Toque no balão para abrir/fechar a calculadora.
 5. Arraste o balão para mudar de lugar. Embaixo do painel ficam **⛽ Abasteci**, **Histórico** e
    **Sair** (que fecha o balão; arrastar o balão até a lixeira faz o mesmo).
-   lixeira que aparece no pé da tela.
 
 Aceita vírgula ou ponto como decimal (`12,50` ou `12.50`).
 
