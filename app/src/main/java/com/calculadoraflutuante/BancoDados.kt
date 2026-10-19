@@ -16,17 +16,23 @@ data class Dia(
     val km: Double = 0.0,
     val kmPorLitro: Double = 0.0,
     val precoLitro: Double = 0.0,
-    val folga: Boolean = false
+    val folga: Boolean = false,
+    // Trechos já fechados com o botão "Abasteci" (km e gasto antes de abastecer).
+    val kmAnterior: Double = 0.0,
+    val gastoAnterior: Double = 0.0
 ) {
     val bruto: Double get() = valor1 + valor2 + valor3
-    val gasto: Double get() = if (kmPorLitro > 0) km / kmPorLitro * precoLitro else 0.0
+    // km e gasto do trecho atual (desde o último abastecimento do dia).
+    val gastoTrecho: Double get() = if (kmPorLitro > 0) km / kmPorLitro * precoLitro else 0.0
+    val kmTotal: Double get() = kmAnterior + km
+    val gasto: Double get() = gastoAnterior + gastoTrecho
     val liquido: Double get() = bruto - gasto
 
     // Conta como registrado se tem algum valor ou foi marcado como dia livre.
-    val registrado: Boolean get() = folga || bruto > 0 || km > 0
+    val registrado: Boolean get() = folga || bruto > 0 || kmTotal > 0
 }
 
-class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db", null, 3) {
+class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db", null, 4) {
 
     override fun onCreate(db: SQLiteDatabase) {
         criarTabelaDias(db)
@@ -47,8 +53,12 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
             )
             db.execSQL("DROP TABLE corridas")
             db.execSQL("DROP TABLE combustivel")
-        } else if (oldVersion < 3) {
-            db.execSQL("ALTER TABLE dias ADD COLUMN folga INTEGER NOT NULL DEFAULT 0")
+        } else {
+            if (oldVersion < 3) db.execSQL("ALTER TABLE dias ADD COLUMN folga INTEGER NOT NULL DEFAULT 0")
+            if (oldVersion < 4) {
+                db.execSQL("ALTER TABLE dias ADD COLUMN km_anterior REAL NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE dias ADD COLUMN gasto_anterior REAL NOT NULL DEFAULT 0")
+            }
         }
     }
 
@@ -62,7 +72,9 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
                 km REAL NOT NULL DEFAULT 0,
                 km_por_litro REAL NOT NULL DEFAULT 0,
                 preco_litro REAL NOT NULL DEFAULT 0,
-                folga INTEGER NOT NULL DEFAULT 0
+                folga INTEGER NOT NULL DEFAULT 0,
+                km_anterior REAL NOT NULL DEFAULT 0,
+                gasto_anterior REAL NOT NULL DEFAULT 0
             )"""
         )
     }
@@ -78,6 +90,8 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
             put("km_por_litro", dia.kmPorLitro)
             put("preco_litro", dia.precoLitro)
             put("folga", if (dia.folga) 1 else 0)
+            put("km_anterior", dia.kmAnterior)
+            put("gasto_anterior", dia.gastoAnterior)
         }, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
@@ -106,7 +120,9 @@ class BancoDados(context: Context) : SQLiteOpenHelper(context, "calculadora.db",
                             km = c.double("km"),
                             kmPorLitro = c.double("km_por_litro"),
                             precoLitro = c.double("preco_litro"),
-                            folga = c.getInt(c.getColumnIndexOrThrow("folga")) == 1
+                            folga = c.getInt(c.getColumnIndexOrThrow("folga")) == 1,
+                            kmAnterior = c.double("km_anterior"),
+                            gastoAnterior = c.double("gasto_anterior")
                         )
                     )
                 }

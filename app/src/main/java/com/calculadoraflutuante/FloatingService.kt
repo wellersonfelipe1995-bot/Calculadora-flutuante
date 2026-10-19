@@ -27,6 +27,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -57,6 +58,13 @@ class FloatingService : Service() {
     private lateinit var botaoCompartilhar: View
     private lateinit var acoesData: View
     private lateinit var liquidoImagem: TextView
+    private lateinit var linhaAbastecer: View
+    private lateinit var btnAbasteci: View
+    private lateinit var btnDesfazer: View
+    private lateinit var infoAbastecido: TextView
+    // Trechos do dia já fechados com "Abasteci" (antes de trocar km/l e preço).
+    private var kmAnterior = 0.0
+    private var gastoAnterior = 0.0
 
     private lateinit var lixeira: ImageView
     private lateinit var banco: BancoDados
@@ -118,6 +126,12 @@ class FloatingService : Service() {
         botaoCompartilhar = root.findViewById(R.id.compartilhar)
         acoesData = root.findViewById(R.id.acoesData)
         liquidoImagem = root.findViewById(R.id.liquidoImagem)
+        linhaAbastecer = root.findViewById(R.id.linhaAbastecer)
+        btnAbasteci = root.findViewById(R.id.btnAbasteci)
+        btnDesfazer = root.findViewById(R.id.btnDesfazer)
+        infoAbastecido = root.findViewById(R.id.infoAbastecido)
+        btnAbasteci.setOnClickListener { abastecer() }
+        btnDesfazer.setOnClickListener { desfazerAbastecimento() }
         botaoCompartilhar.setOnClickListener { compartilhar() }
 
         // km/l e preço do litro: só números, a vírgula entra sozinha (58 → 5,8; 465 → 4,65).
@@ -348,15 +362,18 @@ class FloatingService : Service() {
         val bruto = somaCorrida()
         resultado.text = Formato.moeda(bruto)
 
-        val consumo = Formato.lerValor(kmPorLitro.text.toString())
-        val gastoCombustivel = if (consumo > 0) {
-            Formato.lerValor(km.text.toString()) / consumo * Formato.lerValor(precoLitro.text.toString())
-        } else {
-            0.0
-        }
+        // Gasto do dia = trechos já fechados no "Abasteci" + trecho atual.
+        val gastoCombustivel = gastoAnterior + gastoTrechoAtual()
         gasto.text = Formato.moeda(gastoCombustivel)
         liquidoImagem.text = "Líquido ${Formato.moeda(bruto - gastoCombustivel)}"
         percentual.text = Formato.percentual(gastoCombustivel, bruto)
+        if (kmAnterior > 0) {
+            infoAbastecido.text = "+ ${Formato.moeda(gastoAnterior)} de ${"%.0f".format(kmAnterior)} km antes de abastecer"
+            btnDesfazer.visibility = View.VISIBLE
+        } else {
+            infoAbastecido.text = ""
+            btnDesfazer.visibility = View.GONE
+        }
 
         val hoje = LocalDate.now()
         dataSelecionada.text = when (diaAtual) {
@@ -367,7 +384,7 @@ class FloatingService : Service() {
         diaSeguinte.alpha = if (diaAtual < hoje) 1f else 0.3f
         // Com ganhos ou km lançados não faz sentido marcar dia livre: a opção fica
         // desabilitada (mas, se já estiver marcada, continua dando para desmarcar).
-        val temValores = bruto > 0 || Formato.lerValor(km.text.toString()) > 0
+        val temValores = bruto > 0 || kmAnterior > 0 || Formato.lerValor(km.text.toString()) > 0
         diaLivre.isEnabled = !temValores || diaLivre.isChecked
         diaLivre.alpha = if (diaLivre.isEnabled) 1f else 0.35f
         // Dia livre bloqueia as caixas: não dá para lançar valores num dia de folga.
@@ -377,6 +394,47 @@ class FloatingService : Service() {
             it.alpha = if (livre) 0.4f else 1f
             if (livre && it.hasFocus()) it.clearFocus()
         }
+        btnAbasteci.isEnabled = !livre
+        btnAbasteci.alpha = if (livre) 0.4f else 1f
+    }
+
+    private fun gastoTrechoAtual(): Double {
+        val consumo = Formato.lerValor(kmPorLitro.text.toString())
+        return if (consumo > 0) {
+            Formato.lerValor(km.text.toString()) / consumo * Formato.lerValor(precoLitro.text.toString())
+        } else {
+            0.0
+        }
+    }
+
+    // Fecha o trecho atual (km e gasto com o km/l e preço de antes) e zera o km para o
+    // próximo trecho; km/l e preço ficam como estão para serem trocados pelos novos.
+    private fun abastecer() {
+        val kmTrecho = Formato.lerValor(km.text.toString())
+        if (kmTrecho <= 0) {
+            Toast.makeText(this, "Lance o km rodado até agora antes de tocar em Abasteci", Toast.LENGTH_LONG).show()
+            return
+        }
+        val gastoTrecho = gastoTrechoAtual()
+        kmAnterior += kmTrecho
+        gastoAnterior += gastoTrecho
+        km.setText("")  // salva o dia e atualiza a tela
+        kmPorLitro.requestFocus()
+        kmPorLitro.selectAll()
+        Toast.makeText(
+            this,
+            "Trecho guardado: ${"%.0f".format(kmTrecho)} km · ${Formato.moeda(gastoTrecho)}. Coloque o km/l e o preço novos.",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
+    // Junta de volta os trechos guardados no km atual (com o km/l e preço atuais).
+    private fun desfazerAbastecimento() {
+        val kmJunto = kmAnterior + Formato.lerValor(km.text.toString())
+        kmAnterior = 0.0
+        gastoAnterior = 0.0
+        km.setText(texto(kmJunto))  // salva o dia e atualiza a tela
+        Toast.makeText(this, "Abastecimento desfeito: km somados de volta numa linha só", Toast.LENGTH_SHORT).show()
     }
 
     private fun somaCorrida() = campos.sumOf { Formato.lerValor(it.text.toString()) }
@@ -389,6 +447,8 @@ class FloatingService : Service() {
             ?: banco.ultimoDia()?.let { Dia(diaAtual, kmPorLitro = it.kmPorLitro, precoLitro = it.precoLitro) }
             ?: diaDasPreferenciasAntigas()
 
+        kmAnterior = dia.kmAnterior
+        gastoAnterior = dia.gastoAnterior
         carregando = true
         listOf(dia.valor1, dia.valor2, dia.valor3).forEachIndexed { i, v -> campos[i].setText(texto(v)) }
         km.setText(texto(dia.km))
@@ -419,7 +479,9 @@ class FloatingService : Service() {
                 km = Formato.lerValor(km.text.toString()),
                 kmPorLitro = Formato.lerValor(kmPorLitro.text.toString()),
                 precoLitro = Formato.lerValor(precoLitro.text.toString()),
-                folga = diaLivre.isChecked
+                folga = diaLivre.isChecked,
+                kmAnterior = kmAnterior,
+                gastoAnterior = gastoAnterior
             )
         )
     }
@@ -434,17 +496,22 @@ class FloatingService : Service() {
         val textoData = dataSelecionada.text
         dataSelecionada.text = diaAtual.format(formatoData).replaceFirstChar { it.uppercase() }
         // "Dia livre" e o botão não interessam a quem recebe: no lugar deles vai o líquido.
-        val escondidos = listOf(diaAnterior, diaSeguinte, acoesData)
+        val escondidos = listOf(diaAnterior, diaSeguinte, acoesData, btnAbasteci, btnDesfazer)
         liquidoImagem.visibility = View.VISIBLE
         val visibilidades = escondidos.map { it.visibility }
         escondidos.forEach { it.visibility = View.INVISIBLE }
         val caixas = campos + listOf(km, kmPorLitro, precoLitro)
         caixas.forEach { it.isCursorVisible = false }
 
-        val imagem = Bitmap.createBitmap(panel.width, panel.height, Bitmap.Config.ARGB_8888)
-        Canvas(imagem).apply {
+        val cheia = Bitmap.createBitmap(panel.width, panel.height, Bitmap.Config.ARGB_8888)
+        Canvas(cheia).apply {
             drawColor(0xFF212121.toInt())
             panel.draw(this)
+        }
+        // Sem trecho de abastecimento, a linha do "Abasteci" ficaria vazia: corta fora.
+        val imagem = if (kmAnterior > 0) cheia else {
+            val altura = (linhaAbastecer.top + 4 * resources.displayMetrics.density).toInt().coerceAtMost(cheia.height)
+            Bitmap.createBitmap(cheia, 0, 0, cheia.width, altura).also { if (it !== cheia) cheia.recycle() }
         }
 
         dataSelecionada.text = textoData

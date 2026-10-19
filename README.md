@@ -64,6 +64,13 @@ No topo do painel do balão aparece o dia que está sendo editado (**Hoje**, **O
 As setas ◀ ▶ trocam o dia, para lançar valores atrasados na data certa. Ao tocar no balão,
 o painel sempre volta para hoje. A caixa **Dia livre** marca folga.
 
+### Abastecimento no meio do dia
+
+Se abastecer no meio do dia (e o km/l ou o preço mudarem), toque em **⛽ Abasteci** no balão
+antes de trocar os valores: o km e o gasto até ali ficam guardados, o km volta a zero e você
+coloca o km/l e o preço novos. O gasto, a % e o histórico somam todos os trechos do dia.
+**Desfazer** junta os trechos de volta numa linha só.
+
 ### Lembretes
 
 Se o dia não tiver nenhum valor nem estiver marcado como dia livre, o app avisa

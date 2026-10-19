@@ -204,8 +204,8 @@ class HistoricoActivity : Activity() {
         card.texto(R.id.media, if (trabalhados > 0) Formato.moeda((bruto - gasto) / trabalhados) else "—")
         // Média do mês por km: só entram os dias com km lançado, senão o bruto
         // de um dia sem km inflaria o resultado.
-        val comKm = diasDoMes.filter { it.km > 0 }
-        val kmTotal = comKm.sumOf { it.km }
+        val comKm = diasDoMes.filter { it.kmTotal > 0 }
+        val kmTotal = comKm.sumOf { it.kmTotal }
         card.texto(R.id.ganhoPorKm, if (kmTotal > 0) "${Formato.moeda(comKm.sumOf { it.bruto } / kmTotal)}/km" else "—")
         card.texto(R.id.kmMes, if (kmTotal > 0) "${"%.0f".format(kmTotal)} km" else "—")
         card.texto(R.id.kmPorDia, if (comKm.isNotEmpty()) "${"%.0f".format(kmTotal / comKm.size)} km" else "—")
@@ -266,8 +266,8 @@ class HistoricoActivity : Activity() {
             card.texto(R.id.appFora, Formato.moeda(dia.valor3))
             card.texto(R.id.bruto, Formato.moeda(dia.bruto))
             // Bruto dividido pelos km rodados; sem km lançado não dá para calcular.
-            card.texto(R.id.ganhoPorKm, if (dia.km > 0) "${Formato.moeda(dia.bruto / dia.km)}/km" else "—")
-            card.texto(R.id.rotuloCombustivel, "Combustível · ${"%.0f".format(dia.km)} km")
+            card.texto(R.id.ganhoPorKm, if (dia.kmTotal > 0) "${Formato.moeda(dia.bruto / dia.kmTotal)}/km" else "—")
+            card.texto(R.id.rotuloCombustivel, "Combustível · ${"%.0f".format(dia.kmTotal)} km")
             card.texto(R.id.combustivel, "${Formato.moeda(dia.gasto)} (${Formato.percentual(dia.gasto, dia.bruto)})")
         }
 
